@@ -2,6 +2,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigation from './src/navigations/app-navigation';
 import { AuthProvider } from './src/contexts/auth-context';
+import { QuizProvider } from './src/contexts/quiz-context';
 
 const App = (): React.ReactElement => {
 
@@ -9,7 +10,9 @@ const App = (): React.ReactElement => {
     <SafeAreaProvider>
       <NavigationContainer>
         <AuthProvider>
-          <AppNavigation />
+          <QuizProvider>
+            <AppNavigation />
+          </QuizProvider>
         </AuthProvider>
       </NavigationContainer>
     </SafeAreaProvider>

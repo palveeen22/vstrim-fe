@@ -93,6 +93,15 @@
 	<!-- iOS 14+ Privacy -->
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
+
+	<!-- Location Permission -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to help you find nearby hangout spots and connect with people around you.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your location to help you find nearby hangout spots and connect with people around you.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to help you find nearby hangout spots and connect with people around you.</string>
+	
 	
 	<!-- URL Schemes -->
 	<key>LSApplicationQueriesSchemes</key>

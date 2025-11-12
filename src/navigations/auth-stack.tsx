@@ -25,8 +25,8 @@ const AuthNavigation = () => {
   // if (isLoading) {
   //   return <LoadingScreen />;
   // }
-
-  const needsToVerify = isLoggedIn && !user?.isVerified;
+  
+  const needsToVerify = isLoggedIn && !user?.onboardingCompleted;
 
   const initialRouteName: keyof AuthStackParamList =
     !isLoggedIn ? 'Welcome' : needsToVerify ? 'Verify' : 'Main';

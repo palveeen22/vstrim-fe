@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,112 +9,49 @@ import {
   ScrollView,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useQuiz } from '../contexts/quiz-context';
 
 const { width } = Dimensions.get('window');
 
-type QuestionType = 'single' | 'multiple' | 'interests';
+const QuizScreen = ({ navigation }: any) => {
+  const {
+    questions,
+    currentQuestionIndex,
+    answers,
+    isLoading,
+    error,
+    fetchQuiz,
+    answerQuestion,
+    nextQuestion,
+    previousQuestion,
+    getCurrentQuestion,
+    getProgress,
+    submitQuiz,
+  } = useQuiz();
 
-type Option = {
-  id: string;
-  label: string;
-  icon?: string;
-};
-
-type Question = {
-  id: string;
-  title: string;
-  description?: string;
-  type: QuestionType;
-  options: Option[];
-};
-
-type Answer = {
-  questionId: string;
-  selectedOptions: string[];
-};
-
-const MatchingQuizScreen = ({ navigation }: any) => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answer[]>([]);
   const [slideAnim] = useState(new Animated.Value(0));
 
-  // Quiz Questions Data
-  const questions: Question[] = [
-    {
-      id: 'q1',
-      title: 'What are your main interests?',
-      description: 'Select all that apply - this helps us find your community',
-      type: 'multiple',
-      options: [
-        { id: 'tech', label: 'Technology & Innovation', icon: 'laptop-outline' },
-        { id: 'sports', label: 'Sports & Fitness', icon: 'football-outline' },
-        { id: 'arts', label: 'Arts & Culture', icon: 'color-palette-outline' },
-        { id: 'food', label: 'Food & Cooking', icon: 'restaurant-outline' },
-        { id: 'nature', label: 'Nature & Environment', icon: 'leaf-outline' },
-        { id: 'music', label: 'Music & Entertainment', icon: 'musical-notes-outline' },
-      ],
-    },
-    {
-      id: 'q2',
-      title: 'How active do you want to be?',
-      description: 'Choose your preferred level of community involvement',
-      type: 'single',
-      options: [
-        { id: 'very_active', label: 'Very Active', icon: 'flame-outline' },
-        { id: 'moderately', label: 'Moderately Active', icon: 'walk-outline' },
-        { id: 'casual', label: 'Casual Observer', icon: 'eye-outline' },
-      ],
-    },
-    {
-      id: 'q3',
-      title: 'What brings you here?',
-      description: 'Your main goal helps us personalize your experience',
-      type: 'single',
-      options: [
-        { id: 'connect', label: 'Connect with neighbors', icon: 'people-outline' },
-        { id: 'learn', label: 'Learn new skills', icon: 'school-outline' },
-        { id: 'volunteer', label: 'Volunteer & give back', icon: 'heart-outline' },
-        { id: 'explore', label: 'Explore local events', icon: 'compass-outline' },
-      ],
-    },
-    {
-      id: 'q4',
-      title: 'When are you most available?',
-      description: 'This helps match you with events at convenient times',
-      type: 'multiple',
-      options: [
-        { id: 'weekday_morning', label: 'Weekday Mornings', icon: 'sunny-outline' },
-        { id: 'weekday_evening', label: 'Weekday Evenings', icon: 'moon-outline' },
-        { id: 'weekend', label: 'Weekends', icon: 'calendar-outline' },
-        { id: 'flexible', label: 'Flexible Schedule', icon: 'time-outline' },
-      ],
-    },
-    {
-      id: 'q5',
-      title: 'Your experience level?',
-      description: 'Are you new to community involvement or experienced?',
-      type: 'single',
-      options: [
-        { id: 'beginner', label: 'Just Starting Out', icon: 'seedling-outline' },
-        { id: 'intermediate', label: 'Some Experience', icon: 'trending-up-outline' },
-        { id: 'expert', label: 'Very Experienced', icon: 'trophy-outline' },
-      ],
-    },
-  ];
+  // Fetch quiz on mount
+  useEffect(() => {
+    fetchQuiz();
+  }, [fetchQuiz]);
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const currentQuestion = getCurrentQuestion();
+  const progress = getProgress();
 
   // Get current answers for the question
   const getCurrentAnswer = (): string[] => {
-    const answer = answers.find(a => a.questionId === currentQuestion.id);
-    return answer?.selectedOptions || [];
+    if (!currentQuestion) return [];
+    return answers.get(currentQuestion.id) || [];
   };
 
   // Handle option selection
   const handleSelectOption = (optionId: string) => {
+    if (!currentQuestion) return;
+
     const currentAnswer = getCurrentAnswer();
     let newSelectedOptions: string[];
 
@@ -129,14 +66,8 @@ const MatchingQuizScreen = ({ navigation }: any) => {
       }
     }
 
-    // Update answers
-    setAnswers(prev => {
-      const filtered = prev.filter(a => a.questionId !== currentQuestion.id);
-      return [
-        ...filtered,
-        { questionId: currentQuestion.id, selectedOptions: newSelectedOptions },
-      ];
-    });
+    // Update answers via context
+    answerQuestion(currentQuestion.id, newSelectedOptions);
   };
 
   // Navigate to next question with animation
@@ -155,7 +86,7 @@ const MatchingQuizScreen = ({ navigation }: any) => {
         }),
       ]).start();
 
-      setCurrentQuestionIndex(prev => prev + 1);
+      nextQuestion();
     } else {
       // Quiz completed
       handleComplete();
@@ -178,21 +109,79 @@ const MatchingQuizScreen = ({ navigation }: any) => {
         }),
       ]).start();
 
-      setCurrentQuestionIndex(prev => prev - 1);
+      previousQuestion();
     }
   };
 
   // Skip question
-  const handleSkip = () => {
-    handleNext();
-  };
+  // const handleSkip = () => {
+  //   handleNext();
+  // };
 
   // Complete quiz
-  const handleComplete = () => {
-    // Calculate matching score and navigate to results
-    console.log('Quiz completed:', answers);
-    navigation.navigate('MatchingResults', { answers });
+  const handleComplete = async () => {
+    try {
+      await submitQuiz();
+
+      // Convert Map to array for navigation
+      const answersArray = Array.from(answers.entries()).map(([questionId, selectedOptions]) => ({
+        questionId,
+        selectedOptions,
+      }));
+
+      console.log('Quiz completed:', answersArray);
+      // navigation.navigate('Match');
+    } catch (err) {
+      console.error('Failed to submit quiz:', err);
+    }
   };
+
+  // Loading state
+  if (isLoading && questions.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#FFA726" />
+          <Text style={styles.loadingText}>Loading daily quiz...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centerContainer}>
+          <Icon name="alert-circle-outline" size={64} color="#EF4444" />
+          <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchQuiz}>
+            <Icon name="refresh" size={20} color="#fff" />
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // No questions state
+  if (!currentQuestion || questions.length === 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centerContainer}>
+          <Icon name="file-tray-outline" size={64} color="#9CA3AF" />
+          <Text style={styles.emptyTitle}>No Quiz Available</Text>
+          <Text style={styles.emptyMessage}>
+            There are no questions available at the moment. Please try again later.
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.retryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const isAnswered = getCurrentAnswer().length > 0;
 
@@ -202,12 +191,12 @@ const MatchingQuizScreen = ({ navigation }: any) => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.closeButton}
         >
           <Icon name="close" size={24} color="#1F2937" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
@@ -215,9 +204,9 @@ const MatchingQuizScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+        {/* <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
           <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Progress Bar */}
@@ -248,9 +237,9 @@ const MatchingQuizScreen = ({ navigation }: any) => {
 
           {/* Options */}
           <View style={styles.optionsContainer}>
-            {currentQuestion.options.map((option) => {
+            {Array.isArray(currentQuestion.options) && currentQuestion.options.map((option) => {
               const isSelected = getCurrentAnswer().includes(option.id);
-              
+
               return (
                 <TouchableOpacity
                   key={option.id}
@@ -271,11 +260,11 @@ const MatchingQuizScreen = ({ navigation }: any) => {
                       <Icon
                         name={option.icon}
                         size={24}
-                        color={isSelected ? '#FF6B35' : '#6B7280'}
+                        color={isSelected ? '#FFA726' : '#6B7280'}
                       />
                     </View>
                   )}
-                  
+
                   <Text
                     style={[
                       styles.optionLabel,
@@ -332,12 +321,18 @@ const MatchingQuizScreen = ({ navigation }: any) => {
             currentQuestionIndex === 0 && styles.nextButtonFull,
           ]}
           onPress={handleNext}
-          disabled={!isAnswered}
+          disabled={!isAnswered || isLoading}
         >
-          <Text style={styles.nextButtonText}>
-            {currentQuestionIndex === questions.length - 1 ? 'Complete' : 'Next'}
-          </Text>
-          <Icon name="arrow-forward" size={20} color="#fff" />
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Text style={styles.nextButtonText}>
+                {currentQuestionIndex === questions.length - 1 ? 'Complete' : 'Next'}
+              </Text>
+              <Icon name="arrow-forward" size={20} color="#fff" />
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -349,6 +344,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  errorTitle: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  errorMessage: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  emptyTitle: {
+    marginTop: 16,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  emptyMessage: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFA726',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 24,
+    gap: 8,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -356,12 +407,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  closeButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // closeButton: {
+  //   width: 40,
+  //   height: 40,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  // },
   progressContainer: {
     flex: 1,
     alignItems: 'center',
@@ -371,15 +422,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6B7280',
   },
-  skipButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  skipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FF6B35',
-  },
+  // skipButton: {
+  //   paddingHorizontal: 12,
+  //   paddingVertical: 8,
+  // },
+  // skipText: {
+  //   fontSize: 14,
+  //   fontWeight: '600',
+  //   color: '#FF6B35',
+  // },
   progressBarContainer: {
     height: 4,
     backgroundColor: '#F3F4F6',
@@ -389,7 +440,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#FFA726',
     borderRadius: 2,
   },
   content: {
@@ -428,7 +479,7 @@ const styles = StyleSheet.create({
   },
   optionCardSelected: {
     backgroundColor: '#FFF7ED',
-    borderColor: '#FF6B35',
+    borderColor: '#FFA726',
   },
   optionIconContainer: {
     width: 48,
@@ -462,8 +513,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectionIndicatorSelected: {
-    backgroundColor: '#FF6B35',
-    borderColor: '#FF6B35',
+    backgroundColor: '#FFA726',
+    borderColor: '#FFA726',
   },
   helperContainer: {
     flexDirection: 'row',
@@ -507,7 +558,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#FFA726',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
@@ -525,4 +576,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MatchingQuizScreen;
+export default QuizScreen

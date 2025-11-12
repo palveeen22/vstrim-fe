@@ -76,7 +76,7 @@ const AuthScreen = ({ navigation }: TProps) => {
         {/* Logo/Illustration */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/images/login-logo.png')}
+            source={require('../assets/images/vstrim.png')}
             style={styles.loginIcon}
             resizeMode="contain"
           />
@@ -187,7 +187,7 @@ const AuthScreen = ({ navigation }: TProps) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#007BFF',
   },
   scrollView: {
     flex: 1,
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#fff',
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 15,
-    color: '#666',
+    color: '#fff',
     textAlign: 'center',
   },
   actionsContainer: {
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 13,
-    color: '#999',
+    color: '#fff',
     marginBottom: 14,
     textAlign: 'center',
     fontWeight: '600',
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 54,
-    backgroundColor: '#007BFF',
+    backgroundColor: '#ffff',
     borderRadius: 12,
     marginBottom: 12,
     elevation: 4,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: '#007BFF',
     fontWeight: '600',
   },
   secondaryButton: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
   },
   dividerText: {
-    color: '#999',
+    color: '#fff',
     paddingHorizontal: 12,
     fontSize: 13,
     fontWeight: '500',
@@ -325,12 +325,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
+    color: '#fff',
     textAlign: 'center',
     lineHeight: 18,
   },
   footerLink: {
-    color: '#007BFF',
+    color: '#1e1e1e',
     fontWeight: '600',
   },
 });

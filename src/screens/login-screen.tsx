@@ -128,7 +128,7 @@ const LoginScreen = ({ navigation }: TProps) => {
     try {
       setLoadingProvider('facebook');
       // TODO: Implement Facebook OAuth
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       Alert.alert('Coming Soon', 'Facebook login will be implemented');
     } catch (error) {
       console.error('Facebook login error:', error);
@@ -145,7 +145,7 @@ const LoginScreen = ({ navigation }: TProps) => {
     try {
       setLoadingProvider('apple');
       // TODO: Implement Apple OAuth
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000));
       Alert.alert('Coming Soon', 'Apple login will be implemented');
     } catch (error) {
       console.error('Apple login error:', error);

@@ -1,9 +1,8 @@
-import axios, { AxiosError } from 'axios';
+import apiClient from './api-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AxiosError } from 'axios';
+import { STORAGE_KEYS } from '../constants';
 
-const API_URL = process.env.BASE_URL_API || 'http://localhost:3002/api';
-
-// Types
 export interface LoginCredentials {
   identifier: string; // email or username
   password: string;
@@ -15,16 +14,26 @@ export interface RegisterData {
   password: string;
 }
 
+export interface DailyQuiz {
+  createdAt: Date;
+  id: string;
+  isCompleted: boolean;
+  userId: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  bio?: string;
-  location?: string;
-  image?: string;
-  username?: string;
-  createdAt: string;
-  isVerified: boolean;
+  username?: string | null;
+  bio?: string | null;
+  dateOfBirth?: Date | null;
+  image?: string | null;
+  joinReasons?: string[];
+  isVerified?: boolean;
+  onboardingCompleted?: boolean;
+  createdAt?: Date;
+  dailyQuizzes: DailyQuiz[];
 }
 
 export interface AuthResponse {
@@ -32,234 +41,549 @@ export interface AuthResponse {
   message?: string;
   data?: {
     token: string;
+    refreshToken?: string;
     user: UserProfile;
+    requiresProfileSetup?: boolean;
   };
 }
 
-export interface ApiError {
-  status: 'error';
-  message: string;
-  errors?: Record<string, string[]>;
+export interface ApiResponse<T = any> {
+  status: 'success' | 'error';
+  message?: string;
+  data?: T;
 }
 
-// Axios instance dengan interceptor
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export interface UpdateProfileData {
+  username?: string;
+  bio?: string;
+  dateOfBirth?: Date;
+  image?: string;
+  joinReasons?: string[];
+}
 
-// Request interceptor - attach token to every request
-apiClient.interceptors.request.use(
-  async (config) => {
-    const token = await AsyncStorage.getItem('@vstrim_user_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor - handle token expiration
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<ApiError>) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid, clear storage
-      await AsyncStorage.removeItem('@vstrim_user_token');
-      await AsyncStorage.removeItem('@vstrim_user_profile');
-    }
-    return Promise.reject(error);
-  }
-);
+// ============================================
+// AUTH SERVICE
+// ============================================
 
 export class AuthService {
   /**
-   * Login with email/username and password
+   * ✅ Login with email/username and password
    */
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
+      console.log('🔐 AuthService: Attempting login...');
       const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+      console.log('✅ AuthService: Login successful');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Login failed');
       return AuthService.handleError(error);
     }
   }
 
   /**
-   * Register new user
+   * ✅ Register new user
    */
   static async register(data: RegisterData): Promise<AuthResponse> {
     try {
+      console.log('📝 AuthService: Attempting registration...');
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
+      console.log('✅ AuthService: Registration successful');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Registration failed');
       return AuthService.handleError(error);
     }
   }
 
   /**
-   * Get current user profile
+   * ✅ Get current user profile
    */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const response = await apiClient.get<{ status: 'success'; data: UserProfile }>(
-        `/users/${userId}`
+      console.log('👤 AuthService: Fetching user profile for:', userId);
+      const response = await apiClient.get<ApiResponse<UserProfile>>(
+        `/profile/${userId}`
       );
-      return response.data.data;
+
+      if (response.data.status === 'success' && response.data.data) {
+        console.log('✅ AuthService: User profile fetched successfully');
+        return response.data.data;
+      }
+
+      console.warn('⚠️ AuthService: No user data in response');
+      return null;
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('❌ AuthService: Error fetching user profile:', error);
+      
+      // If it's a 401/403, the token might be invalid
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          console.warn('⚠️ AuthService: Unauthorized - token might be invalid');
+        }
+      }
+      
       return null;
     }
   }
 
   /**
-   * Update user profile
+   * ✅ Update basic user profile (after onboarding)
    */
   static async updateProfile(
     userId: string,
-    data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>
+    data: UpdateProfileData
   ): Promise<AuthResponse> {
     try {
-      const response = await apiClient.patch<AuthResponse>(`/users/${userId}`, data);
+      console.log('📝 AuthService: Updating profile for user:', userId);
+      const response = await apiClient.patch<AuthResponse>(
+        `/users/${userId}`,
+        data
+      );
+      console.log('✅ AuthService: Profile updated successfully');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Profile update failed');
       return AuthService.handleError(error);
     }
   }
 
   /**
-   * Change password
+   * ✅ Complete profile setup (onboarding)
+   */
+  static async completeProfileSetup(
+    userId: string,
+    data: any
+  ): Promise<AuthResponse> {
+    try {
+      console.log('📝 AuthService: Completing profile setup for user:', userId);
+      const response = await apiClient.patch<AuthResponse>(
+        `/users/${userId}/profile-setup`,
+        data
+      );
+      console.log('✅ AuthService: Profile setup completed');
+      return response.data;
+    } catch (error) {
+      console.error('❌ AuthService: Profile setup failed');
+      return AuthService.handleError(error);
+    }
+  }
+
+  /**
+   * ✅ Check username availability
+   */
+  static async checkUsernameAvailability(username: string): Promise<{
+    available: boolean;
+    message?: string;
+  }> {
+    try {
+      console.log('🔍 AuthService: Checking username availability:', username);
+      const response = await apiClient.get<ApiResponse<{ available: boolean }>>(
+        `/auth/check-username/${username}`
+      );
+
+      if (response.data.status === 'success' && response.data.data) {
+        console.log('✅ AuthService: Username check complete');
+        return {
+          available: response.data.data.available,
+          message: response.data.message
+        };
+      }
+
+      return { available: false, message: 'Unable to verify username' };
+
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        // Some backends return 404 for available usernames
+        if (error.response?.status === 404) {
+          console.log('✅ AuthService: Username available (404)');
+          return { available: true };
+        }
+
+        console.error('❌ AuthService: Username check failed');
+        return {
+          available: false,
+          message: error.response?.data?.message || 'Unable to check username'
+        };
+      }
+
+      console.error('❌ AuthService: Network error during username check');
+      return { available: false, message: 'Network error occurred' };
+    }
+  }
+
+  /**
+   * ✅ Change password
    */
   static async changePassword(
     oldPassword: string,
     newPassword: string
   ): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/change-password', {
-        oldPassword,
-        newPassword,
-      });
+      console.log('🔒 AuthService: Changing password...');
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/change-password',
+        { oldPassword, newPassword }
+      );
+      console.log('✅ AuthService: Password changed successfully');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Password change failed');
       return AuthService.handleError(error);
     }
   }
 
-  /**
-   * Request password reset
-   */
   static async requestPasswordReset(email: string): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/forgot-password', {
-        email,
-      });
+      console.log('📧 AuthService: Requesting password reset for:', email);
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/forgot-password',
+        { email }
+      );
+      console.log('✅ AuthService: Password reset email sent');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Password reset request failed');
       return AuthService.handleError(error);
     }
   }
 
-  /**
-   * Reset password with token
-   */
-  static async resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
+
+  static async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/reset-password', {
-        token,
-        newPassword,
-      });
+      console.log('🔑 AuthService: Resetting password with token...');
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/reset-password',
+        { token, newPassword }
+      );
+      console.log('✅ AuthService: Password reset successful');
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Password reset failed');
       return AuthService.handleError(error);
     }
   }
 
-  /**
-   * Validate username availability
-   */
-  static async checkUsernameAvailability(username: string): Promise<boolean> {
-    try {
-      const response = await apiClient.get<{ available: boolean }>(
-        `/auth/check-username/${username}`
-      );
-      return response.data.available;
-    } catch (error) {
-      return false;
-    }
-  }
 
-  /**
-   * Validate email availability
-   */
-  static async checkEmailAvailability(email: string): Promise<boolean> {
-    try {
-      const response = await apiClient.get<{ available: boolean }>(
-        `/auth/check-email/${email}`
-      );
-      return response.data.available;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Refresh auth token
-   */
   static async refreshToken(): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/refresh');
+      console.log('🔄 AuthService: Refreshing token...');
+      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+
+      if (!refreshToken) {
+        console.warn('⚠️ AuthService: No refresh token available');
+        return {
+          status: 'error',
+          message: 'No refresh token available'
+        };
+      }
+
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/refresh',
+        { refreshToken }
+      );
+
+      // Save new token
+      if (response.data.status === 'success' && response.data.data?.token) {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.AUTH_TOKEN,
+          response.data.data.token
+        );
+        console.log('✅ AuthService: Token refreshed and saved');
+      }
+
       return response.data;
     } catch (error) {
+      console.error('❌ AuthService: Token refresh failed');
       return AuthService.handleError(error);
     }
   }
 
-  /**
-   * Logout - clear local storage
-   */
+ 
   static async logout(): Promise<void> {
     try {
-      // Optional: call backend to invalidate token
-      await apiClient.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout API call failed:', error);
-    } finally {
+      console.log('👋 AuthService: Logging out...');
+      
+      // Optional: Call backend to invalidate token
+      // Don't await this - we want to clear local data regardless
+      apiClient.post('/auth/logout').catch(err => {
+        console.warn('⚠️ AuthService: Logout API call failed (non-critical):', err.message);
+      });
+
       // Always clear local storage
-      await AsyncStorage.removeItem('@vstrim_user_token');
-      await AsyncStorage.removeItem('@vstrim_user_profile');
+      await AuthService.clearAuthData();
+      console.log('✅ AuthService: Logout complete');
+
+    } catch (error) {
+      console.error('❌ AuthService: Logout error (clearing data anyway):', error);
+      // Force clear even if there's an error
+      try {
+        await AuthService.clearAuthData();
+      } catch (clearError) {
+        console.error('❌ AuthService: Critical - failed to clear auth data:', clearError);
+      }
     }
   }
 
-  /**
-   * Error handler
-   */
+  static async clearAuthData(): Promise<void> {
+    try {
+      console.log('🧹 AuthService: Clearing auth data...');
+      
+      await Promise.all([
+        AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
+        AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+        AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA),
+      ]);
+
+      console.log('✅ AuthService: Auth data cleared successfully');
+    } catch (error) {
+      console.error('❌ AuthService: Error clearing auth data:', error);
+      throw error; // Re-throw so caller knows it failed
+    }
+  }
+
+
+  static async saveAuthData(
+    token: string, 
+    user: UserProfile, 
+    refreshToken?: string
+  ): Promise<void> {
+    try {
+      console.log('💾 AuthService: Saving auth data...');
+      console.log('📊 Data to save:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        hasRefreshToken: !!refreshToken,
+        userId: user?.id,
+        userEmail: user?.email
+      });
+
+      // Validate input
+      if (!token) {
+        throw new Error('Token is required');
+      }
+      if (!user || !user.id) {
+        throw new Error('Valid user object is required');
+      }
+
+      const saveOperations = [
+        AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token),
+        AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user)),
+      ];
+
+      if (refreshToken) {
+        saveOperations.push(
+          AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
+        );
+      }
+
+      await Promise.all(saveOperations);
+      
+      console.log('✅ AuthService: Auth data saved successfully');
+      
+      // Verify save
+      const verification = await AuthService.verifyAuthDataSaved();
+      if (!verification.success) {
+        console.error('❌ AuthService: Verification failed after save!');
+        throw new Error('Failed to verify saved auth data');
+      }
+
+    } catch (error) {
+      console.error('❌ AuthService: Error saving auth data:', error);
+      throw error; // Re-throw so caller knows save failed
+    }
+  }
+
+
+  static async verifyAuthDataSaved(): Promise<{
+    success: boolean;
+    details: {
+      hasToken: boolean;
+      hasUser: boolean;
+      hasRefreshToken: boolean;
+    };
+  }> {
+    try {
+      const [token, userData, refreshToken] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
+        AsyncStorage.getItem(STORAGE_KEYS.USER_DATA),
+        AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+      ]);
+
+      const details = {
+        hasToken: !!token,
+        hasUser: !!userData,
+        hasRefreshToken: !!refreshToken,
+      };
+
+      const success = details.hasToken && details.hasUser;
+
+      if (!success) {
+        console.warn('⚠️ AuthService: Verification failed:', details);
+      }
+
+      return { success, details };
+    } catch (error) {
+      console.error('❌ AuthService: Error verifying auth data:', error);
+      return {
+        success: false,
+        details: {
+          hasToken: false,
+          hasUser: false,
+          hasRefreshToken: false,
+        }
+      };
+    }
+  }
+
+
+  static async getAuthData(): Promise<{
+    token: string | null;
+    user: UserProfile | null;
+    refreshToken: string | null;
+  }> {
+    try {
+      console.log('📖 AuthService: Reading auth data from storage...');
+      
+      const [token, userData, refreshToken] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
+        AsyncStorage.getItem(STORAGE_KEYS.USER_DATA),
+        AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+      ]);
+
+      let user: UserProfile | null = null;
+      
+      if (userData) {
+        try {
+          user = JSON.parse(userData);
+          console.log('✅ AuthService: User data parsed successfully');
+        } catch (parseError) {
+          console.error('❌ AuthService: Failed to parse user data:', parseError);
+          // Clear corrupt data
+          await AuthService.clearAuthData();
+        }
+      }
+
+      console.log('📊 AuthService: Auth data retrieved:', {
+        hasToken: !!token,
+        hasUser: !!user,
+        hasRefreshToken: !!refreshToken,
+        userId: user?.id,
+        userEmail: user?.email
+      });
+
+      return { token, user, refreshToken };
+    } catch (error) {
+      console.error('❌ AuthService: Error getting auth data:', error);
+      return { token: null, user: null, refreshToken: null };
+    }
+  }
+
+
+  static async isAuthenticated(): Promise<boolean> {
+    try {
+      const { token, user } = await AuthService.getAuthData();
+      const isAuth = !!(token && user?.id);
+      console.log('🔐 AuthService: Authentication status:', isAuth);
+      return isAuth;
+    } catch (error) {
+      console.error('❌ AuthService: Error checking auth status:', error);
+      return false;
+    }
+  }
+
+
   private static handleError(error: unknown): AuthResponse {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<ApiError>;
-      
-      if (axiosError.response?.data) {
+    if (error instanceof AxiosError) {
+      // Network error
+      if (error.message === 'Network Error') {
+        console.error('🌐 Network error - no internet connection');
         return {
           status: 'error',
-          message: axiosError.response.data.message || 'An error occurred',
+          message: 'No internet connection. Please check your network.',
         };
       }
-      
-      if (axiosError.message === 'Network Error') {
+
+      // Timeout
+      if (error.code === 'ECONNABORTED') {
+        console.error('⏱️ Request timeout');
         return {
           status: 'error',
-          message: 'Network error. Please check your connection.',
+          message: 'Request timeout. Please try again.',
         };
       }
+
+      // Server response error
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+        const errorMessage = errorData?.message || 'An error occurred';
+
+        console.error(`❌ API Error ${status}:`, errorMessage);
+
+        // Handle specific status codes
+        switch (status) {
+          case 400:
+            return {
+              status: 'error',
+              message: errorMessage || 'Invalid request. Please check your input.',
+            };
+          case 401:
+            return {
+              status: 'error',
+              message: 'Invalid credentials. Please try again.',
+            };
+          case 403:
+            return {
+              status: 'error',
+              message: 'Access denied.',
+            };
+          case 404:
+            return {
+              status: 'error',
+              message: 'Resource not found.',
+            };
+          case 409:
+            return {
+              status: 'error',
+              message: errorMessage || 'A conflict occurred.',
+            };
+          case 422:
+            return {
+              status: 'error',
+              message: errorMessage || 'Validation failed.',
+            };
+          case 500:
+          case 502:
+          case 503:
+            return {
+              status: 'error',
+              message: 'Server error. Please try again later.',
+            };
+          default:
+            return {
+              status: 'error',
+              message: errorMessage,
+            };
+        }
+      }
+
+      // Request made but no response
+      console.error('❌ No response from server');
+      return {
+        status: 'error',
+        message: 'No response from server. Please try again.',
+      };
     }
 
+    // Unknown error
+    console.error('❌ Unexpected error:', error);
     return {
       status: 'error',
-      message: 'An unexpected error occurred',
+      message: 'An unexpected error occurred. Please try again.',
     };
   }
 }
