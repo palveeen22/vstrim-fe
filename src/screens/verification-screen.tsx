@@ -16,11 +16,12 @@ import { useUsernameValidation } from '../hooks/use-username-validation';
 import { useAuth } from '../contexts/auth-context';
 import { useLocation } from '../hooks/use-location';
 import { HangoutPlacePicker } from '../components/hangout-place-picker';
+import { JOIN_REASONS, MOCK_INTERESTS, VIBES } from '../constants';
 
-// ✅ Updated types based on new schema
 interface FormData {
+  name: string;
   username: string;
-  vibes: string;
+  vibes: string[];
   interests: string[];
   joinReasons: string[];
   coordinates: {
@@ -38,99 +39,9 @@ interface FormData {
   }>;
 }
 
-// ✅ Join Reasons from backend enum
-const JOIN_REASONS = [
-  {
-    icon: '👥',
-    title: 'Make Friends',
-    description: 'Connect with new people and build friendships',
-    value: 'MAKE_FRIENDS',
-  },
-  {
-    icon: '🏃',
-    title: 'Find Activity Partners',
-    description: 'Meet people to do activities together',
-    value: 'FIND_ACTIVITY_PARTNERS',
-  },
-  {
-    icon: '🗺️',
-    title: 'Explore City',
-    description: 'Discover new places in my city',
-    value: 'EXPLORE_CITY',
-  },
-  {
-    icon: '✨',
-    title: 'Try New Experiences',
-    description: 'Step out of comfort zone and try new things',
-    value: 'TRY_NEW_EXPERIENCES',
-  },
-  {
-    icon: '💼',
-    title: 'Professional Networking',
-    description: 'Build professional connections',
-    value: 'PROFESSIONAL_NETWORKING',
-  },
-  {
-    icon: '💕',
-    title: 'Dating & Relationships',
-    description: 'Meet potential romantic partners',
-    value: 'DATING_RELATIONSHIPS',
-  },
-  {
-    icon: '🏠',
-    title: 'New to Area',
-    description: 'Just moved and want to meet locals',
-    value: 'NEW_TO_AREA',
-  },
-  {
-    icon: '🌟',
-    title: 'Expand Social Circle',
-    description: 'Grow my social network',
-    value: 'EXPAND_SOCIAL_CIRCLE',
-  },
-  {
-    icon: '🎯',
-    title: 'Find Hobby Community',
-    description: 'Connect with people who share my interests',
-    value: 'FIND_HOBBY_COMMUNITY',
-  },
-  {
-    icon: '🎉',
-    title: 'Attend Events',
-    description: 'Find and join local events',
-    value: 'ATTEND_EVENTS',
-  },
-];
-
-// ✅ Moods matching DailyMood enum
-const VIBES = [
-  { emoji: '⚡', label: 'Energetic', value: 'energetic' },
-  { emoji: '😌', label: 'Calm', value: 'calm' },
-  { emoji: '🚀', label: 'Adventurous', value: 'adventurous' },
-  { emoji: '😎', label: 'Chill', value: 'chill' },
-  { emoji: '🎉', label: 'Social', value: 'social' },
-  { emoji: '🤔', label: 'Introspective', value: 'introspective' },
-  { emoji: '🎨', label: 'Creative', value: 'creative' },
-  { emoji: '🎯', label: 'Focused', value: 'focused' },
-];
-
-// ✅ Mock interests (in real app, fetch from API)
-const MOCK_INTERESTS = [
-  { id: '1', name: 'Sports', category: 'sports', icon: '⚽' },
-  { id: '2', name: 'Music', category: 'music', icon: '🎵' },
-  { id: '3', name: 'Art', category: 'arts', icon: '🎨' },
-  { id: '4', name: 'Technology', category: 'tech', icon: '💻' },
-  { id: '5', name: 'Cooking', category: 'food', icon: '👨‍🍳' },
-  { id: '6', name: 'Travel', category: 'travel', icon: '✈️' },
-  { id: '7', name: 'Fitness', category: 'fitness', icon: '💪' },
-  { id: '8', name: 'Reading', category: 'reading', icon: '📚' },
-  { id: '9', name: 'Gaming', category: 'gaming', icon: '🎮' },
-  { id: '10', name: 'Photography', category: 'arts', icon: '📷' },
-];
-
 const ProfileVerificationScreen = () => {
-  const { updateProfile } = useAuth();
-  
+  const { completeProfileSetup } = useAuth();
+
   // Location hook
   const {
     coordinates,
@@ -138,12 +49,13 @@ const ProfileVerificationScreen = () => {
     hasPermission,
     getCurrentLocation,
   } = useLocation();
-  
-  const [step, setStep] = useState(1);
+
+  const [step, setStep] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
+    name: '',
     username: '',
-    vibes: '',
+    vibes: [],
     interests: [],
     joinReasons: [],
     coordinates: null,
@@ -173,7 +85,7 @@ const ProfileVerificationScreen = () => {
   // Request location on mount
   useEffect(() => {
     handleGetLocation();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGetLocation = async () => {
@@ -184,15 +96,15 @@ const ProfileVerificationScreen = () => {
   };
 
   // ✅ Toggle interest selection
-  const toggleInterest = (interestId: string) => {
+  const toggleInterest = (interestCategory: string) => {
     setFormData(prev => {
       const currentInterests = prev.interests;
-      const isSelected = currentInterests.includes(interestId);
+      const isSelected = currentInterests.includes(interestCategory);
 
       if (isSelected) {
         return {
           ...prev,
-          interests: currentInterests.filter(id => id !== interestId)
+          interests: currentInterests.filter(cat => cat !== interestCategory)
         };
       } else {
         if (currentInterests.length >= 10) {
@@ -201,11 +113,26 @@ const ProfileVerificationScreen = () => {
         }
         return {
           ...prev,
-          interests: [...currentInterests, interestId]
+          interests: [...currentInterests, interestCategory]
         };
       }
     });
   };
+
+
+  const toggleVibe = (vibeValue: string) => {
+    setFormData(prev => {
+      const currentVibes = prev.vibes;
+      const isSelected = currentVibes.includes(vibeValue);
+
+      if (isSelected) {
+        return { ...prev, vibes: currentVibes.filter(v => v !== vibeValue) };
+      } else {
+        return { ...prev, vibes: [...currentVibes, vibeValue] };
+      }
+    });
+  };
+
 
   // ✅ Toggle join reason selection
   const toggleJoinReason = (reasonValue: string) => {
@@ -250,13 +177,20 @@ const ProfileVerificationScreen = () => {
   };
 
   const handleBack = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 0) setStep(step - 1);
   };
 
   const handleSubmit = async () => {
     try {
       if (isSubmitting) return;
       setIsSubmitting(true);
+
+      if (!formData.name.trim()) {
+        Alert.alert('Missing Information', 'Please enter your full name');
+        setIsSubmitting(false);
+        return;
+      }
+
 
       // ✅ Validate all required data
       if (!isUsernameValid) {
@@ -291,6 +225,7 @@ const ProfileVerificationScreen = () => {
 
       // ✅ Prepare data matching backend schema
       const profileData = {
+        name: formData.name.trim(),
         username: username.trim(),
         vibes: formData.vibes,
         interests: formData.interests,
@@ -301,23 +236,23 @@ const ProfileVerificationScreen = () => {
           city: formData.coordinates.city,
           district: formData.coordinates.district,
         },
-        hangoutPlaces: formData.hangoutPlaces.length > 0 
-          ? formData.hangoutPlaces 
+        hangoutPlaces: formData.hangoutPlaces.length > 0
+          ? formData.hangoutPlaces
           : [
-              // Default hangout place if none selected
-              {
-                placeName: 'My Location',
-                placeType: 'other',
-                latitude: formData.coordinates.latitude,
-                longitude: formData.coordinates.longitude,
-                address: `${formData.coordinates.district}, ${formData.coordinates.city}`,
-              }
-            ]
+            // Default hangout place if none selected
+            {
+              placeName: 'My Location',
+              placeType: 'other',
+              latitude: formData.coordinates.latitude,
+              longitude: formData.coordinates.longitude,
+              address: `${formData.coordinates.district}, ${formData.coordinates.city}`,
+            }
+          ]
       };
 
       console.log('Submitting profile data:', profileData);
 
-      const result = await updateProfile(profileData);
+      const result = await completeProfileSetup(profileData);
 
       if (result.success) {
         Alert.alert(
@@ -341,10 +276,12 @@ const ProfileVerificationScreen = () => {
 
   const isStepValid = (): boolean => {
     switch (step) {
+      case 0:
+        return formData.name.trim().length >= 3;
       case 1:
         return isUsernameValid;
       case 2:
-        return formData.vibes !== '';
+        return formData.vibes.length >= 1;
       case 3:
         return formData.interests.length >= 3;
       case 4:
@@ -355,6 +292,8 @@ const ProfileVerificationScreen = () => {
         return false;
     }
   };
+
+
 
   const getInputBorderColor = () => {
     if (username.length === 0) return '#E5E7EB';
@@ -374,36 +313,45 @@ const ProfileVerificationScreen = () => {
           showsVerticalScrollIndicator={false}>
           {/* Progress Bar */}
           <View style={styles.progressContainer}>
-            {[1, 2, 3, 4, 5].map((s) => (
-              <View key={s} style={styles.progressStepContainer}>
-                <View
-                  style={[
-                    styles.progressCircle,
-                    step >= s && styles.progressCircleActive,
-                    step > s && styles.progressCircleCompleted,
-                  ]}>
-                  <Text
-                    style={[
-                      styles.progressText,
-                      step >= s && styles.progressTextActive,
-                    ]}>
-                    {s}
-                  </Text>
-                </View>
-                {s < 5 && (
-                  <View
-                    style={[
-                      styles.progressLine,
-                      step > s && styles.progressLineActive,
-                    ]}
-                  />
-                )}
-              </View>
+            {[1, 2, 3, 4, 5, 6].map((s, index) => (
+              <TouchableOpacity
+                key={s}
+                style={[
+                  styles.dot,
+                  index === step && styles.dotActive
+                ]}
+                onPress={() => {
+                  setStep(index);
+                  // scrollTo(index);
+                }}
+              />
             ))}
           </View>
-
           {/* Step Content */}
           <View style={styles.contentContainer}>
+            {/* Step 0 name */}
+            {step === 0 && (
+              <View style={styles.stepContainer}>
+                <Text style={styles.title}>What’s your full name?</Text>
+                <Text style={styles.subtitle}>This is how others will see you</Text>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Full Name</Text>
+                  <TextInput
+                    // eslint-disable-next-line react-native/no-inline-styles
+                    style={[styles.input, { borderColor: formData.name ? '#10B981' : '#E5E7EB' }]}
+                    value={formData.name}
+                    onChangeText={(text) =>
+                      setFormData((prev) => ({ ...prev, name: text }))
+                    }
+                    placeholder="Enter your full name"
+                    placeholderTextColor="#9CA3AF"
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
+            )}
+
             {/* ✅ Step 1: Username */}
             {step === 1 && (
               <View style={styles.stepContainer}>
@@ -477,11 +425,9 @@ const ProfileVerificationScreen = () => {
                       key={vibe.value}
                       style={[
                         styles.moodCard,
-                        formData.vibes === vibe.value && styles.moodCardActive,
+                        formData.vibes.includes(vibe.value) && styles.moodCardActive
                       ]}
-                      onPress={() =>
-                        setFormData({ ...formData, vibes: vibe.value })
-                      }>
+                      onPress={() => toggleVibe(vibe.value)}>
                       <Text style={styles.moodEmoji}>{vibe.emoji}</Text>
                       <Text style={styles.moodLabel}>{vibe.label}</Text>
                     </TouchableOpacity>
@@ -507,7 +453,7 @@ const ProfileVerificationScreen = () => {
 
                 <View style={styles.interestGrid}>
                   {MOCK_INTERESTS.map((interest) => {
-                    const selected = formData.interests.includes(interest.id);
+                    const selected = formData.interests.includes(interest.category);
                     const isMaxReached = formData.interests.length >= 10 && !selected;
 
                     return (
@@ -518,13 +464,16 @@ const ProfileVerificationScreen = () => {
                           selected && styles.interestCardActive,
                           isMaxReached && styles.interestCardDisabled,
                         ]}
-                        onPress={() => toggleInterest(interest.id)}
-                        disabled={isMaxReached}>
+                        onPress={() => toggleInterest(interest.category)}
+                        disabled={isMaxReached}
+                      >
                         <Text style={styles.interestIcon}>{interest.icon}</Text>
-                        <Text style={[
-                          styles.interestLabel,
-                          isMaxReached && styles.interestTextDisabled
-                        ]}>
+                        <Text
+                          style={[
+                            styles.interestLabel,
+                            isMaxReached && styles.interestTextDisabled,
+                          ]}
+                        >
                           {interest.name}
                         </Text>
                         {selected && (
@@ -535,6 +484,7 @@ const ProfileVerificationScreen = () => {
                       </TouchableOpacity>
                     );
                   })}
+
                 </View>
               </View>
             )}
@@ -614,7 +564,7 @@ const ProfileVerificationScreen = () => {
                 {/* Current Location Section */}
                 <View style={styles.locationSection}>
                   <Text style={styles.sectionLabel}>Your Location</Text>
-                  
+
                   {formData.coordinates ? (
                     <View style={styles.locationCard}>
                       <Text style={styles.locationIcon}>📍</Text>
@@ -677,7 +627,7 @@ const ProfileVerificationScreen = () => {
                     <Text style={styles.sectionHelp}>
                       Add up to 5 places where you like to hang out
                     </Text>
-                    
+
                     <HangoutPlacePicker
                       places={formData.hangoutPlaces}
                       onAddPlace={handleAddHangoutPlace}
@@ -694,11 +644,12 @@ const ProfileVerificationScreen = () => {
 
         {/* Navigation Buttons */}
         <View style={styles.buttonContainer}>
-          {step > 1 && (
+          {step > 0 && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
               <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
           )}
+
 
           <TouchableOpacity
             style={[
@@ -741,24 +692,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  dot: {
+    width: 60,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E0E0E0',
+  },
+  dotActive: {
+    width: 60,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#007BFF',
   },
   progressStepContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  progressCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressCircleActive: {
-    backgroundColor: '#8B5CF6',
-  },
-  progressCircleCompleted: {
-    backgroundColor: '#10B981',
+    flex: 1,
   },
   progressText: {
     fontSize: 16,
@@ -769,7 +721,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   progressLine: {
-    width: 40,
+    flex: 1,
     height: 3,
     backgroundColor: '#E5E7EB',
   },

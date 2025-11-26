@@ -7,84 +7,51 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  Image,
+  // Image,
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import HeaderBack from '../../components/header-back';
+import { useAuth } from '../../contexts/auth-context';
 
-type Community = {
-  id: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  image?: string;
-  category: string;
-  isJoined: boolean;
-};
 
 const MyCommunityScreen = ({ navigation }: any) => {
-  // const { user } = useAuth();
+  const { user } = useAuth();
 
-  // Mock data - replace with actual data from API/context
-  const [communities, setCommunities] = React.useState<Community[]>([
-    {
-      id: '1',
-      name: 'Local Gardeners',
-      description: 'Komunitas pecinta tanaman dan berkebun di sekitar kita',
-      memberCount: 1250,
-      category: 'Hobbies',
-      isJoined: true,
-    },
-    {
-      id: '2',
-      name: 'Neighborhood Watch',
-      description: 'Menjaga keamanan dan kenyamanan lingkungan bersama',
-      memberCount: 890,
-      category: 'Safety',
-      isJoined: true,
-    },
-    {
-      id: '3',
-      name: 'Food Lovers Jakarta',
-      description: 'Berbagi rekomendasi kuliner terbaik di Jakarta',
-      memberCount: 3420,
-      category: 'Food',
-      isJoined: true,
-    },
-  ]);
+
+  console.log(user?.communities, "<<<<<<<");
 
   const handleCommunityPress = (communityId: string) => {
     // Navigate to community detail
     Alert.alert('Community Detail', `Navigating to community ${communityId}`);
   };
 
-  const handleLeaveCommunity = (communityId: string, communityName: string) => {
-    Alert.alert(
-      'Leave Community',
-      `Are you sure you want to leave "${communityName}"?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: () => {
-            setCommunities(prev =>
-              prev.map(comm =>
-                comm.id === communityId
-                  ? { ...comm, isJoined: false, memberCount: comm.memberCount - 1 }
-                  : comm
-              )
-            );
-            Alert.alert('Success', 'You have left the community');
-          },
-        },
-      ]
-    );
-  };
+  // const handleLeaveCommunity = (communityId: string, communityName: string) => {
+  //   Alert.alert(
+  //     'Leave Community',
+  //     `Are you sure you want to leave "${communityName}"?`,
+  //     [
+  //       {
+  //         text: 'Cancel',
+  //         style: 'cancel',
+  //       },
+  //       {
+  //         text: 'Leave',
+  //         style: 'destructive',
+  //         onPress: () => {
+  //           setCommunities(prev =>
+  //             prev.map(comm =>
+  //               comm.id === communityId
+  //                 ? { ...comm, isJoined: false, memberCount: comm.memberCount - 1 }
+  //                 : comm
+  //             )
+  //           );
+  //           Alert.alert('Success', 'You have left the community');
+  //         },
+  //       },
+  //     ]
+  //   );
+  // };
 
   const handleExploreMore = () => {
     Alert.alert('Explore Communities', 'Feature coming soon!');
@@ -112,7 +79,7 @@ const MyCommunityScreen = ({ navigation }: any) => {
     return colors[category] || '#6B7280';
   };
 
-  const joinedCommunities = communities.filter(c => c.isJoined);
+  const joinedCommunities = user?.communities
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -140,7 +107,7 @@ const MyCommunityScreen = ({ navigation }: any) => {
         </View>
 
         {/* Communities List */}
-        {joinedCommunities.length === 0 ? (
+        {joinedCommunities?.length === 0 ? (
           <View style={styles.emptyState}>
             <Icon name="people-outline" size={64} color="#D1D5DB" />
             <Text style={styles.emptyTitle}>No Communities Yet</Text>
@@ -156,16 +123,16 @@ const MyCommunityScreen = ({ navigation }: any) => {
           </View>
         ) : (
           <View style={styles.communitiesList}>
-            {joinedCommunities.map((community) => (
+            {joinedCommunities?.map((community, idx) => (
               <TouchableOpacity
-                key={community.id}
+                key={idx}
                 style={styles.communityCard}
                 onPress={() => handleCommunityPress(community.id)}
                 activeOpacity={0.7}
               >
                 {/* Community Image/Icon */}
                 <View style={styles.communityLeft}>
-                  {community.image ? (
+                  {/* {community.image ? (
                     <Image
                       source={{ uri: community.image }}
                       style={styles.communityImage}
@@ -186,21 +153,21 @@ const MyCommunityScreen = ({ navigation }: any) => {
                         color={getCategoryColor(community.category)}
                       />
                     </View>
-                  )}
+                  )} */}
 
                   <View style={styles.communityInfo}>
                     <Text style={styles.communityName} numberOfLines={1}>
-                      {community.name}
+                      {community?.community?.name}
                     </Text>
                     <Text style={styles.communityDescription} numberOfLines={2}>
-                      {community.description}
+                      {community?.community?.description}
                     </Text>
                     <View style={styles.communityMeta}>
-                      <Icon name="people" size={14} color="#9CA3AF" />
-                      <Text style={styles.memberCount}>
+                      {/* <Icon name="people" size={14} color="#9CA3AF" /> */}
+                      {/* <Text style={styles.memberCount}>
                         {community.memberCount.toLocaleString()} members
-                      </Text>
-                      <View
+                      </Text> */}
+                      {/* <View
                         style={[
                           styles.categoryBadge,
                           {
@@ -217,13 +184,13 @@ const MyCommunityScreen = ({ navigation }: any) => {
                         >
                           {community.category}
                         </Text>
-                      </View>
+                      </View> */}
                     </View>
                   </View>
                 </View>
 
                 {/* Action Button */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={styles.leaveButton}
                   onPress={(e) => {
                     e.stopPropagation();
@@ -231,7 +198,7 @@ const MyCommunityScreen = ({ navigation }: any) => {
                   }}
                 >
                   <Icon name="exit-outline" size={20} color="#EF4444" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </TouchableOpacity>
             ))}
           </View>

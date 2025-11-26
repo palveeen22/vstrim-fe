@@ -4,12 +4,11 @@ import { AxiosError } from 'axios';
 import { STORAGE_KEYS } from '../constants';
 
 export interface LoginCredentials {
-  identifier: string; // email or username
+  identifier: string;
   password: string;
 }
 
 export interface RegisterData {
-  name: string;
   email: string;
   password: string;
 }
@@ -21,11 +20,19 @@ export interface DailyQuiz {
   userId: string;
 }
 
+interface UserComunity {
+  createdAt: Date;
+  description: string;
+  id: string;
+  name: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
+  tokens?: number;
   email: string;
-  username?: string | null;
+  username: string;
   bio?: string | null;
   dateOfBirth?: Date | null;
   image?: string | null;
@@ -34,13 +41,16 @@ export interface UserProfile {
   onboardingCompleted?: boolean;
   createdAt?: Date;
   dailyQuizzes: DailyQuiz[];
+  communities: {
+    comunity: UserComunity[]
+  }
 }
 
 export interface AuthResponse {
   status: 'success' | 'error';
   message?: string;
   data?: {
-    token: string;
+    accessToken: string;
     refreshToken?: string;
     user: UserProfile;
     requiresProfileSetup?: boolean;
@@ -61,14 +71,7 @@ export interface UpdateProfileData {
   joinReasons?: string[];
 }
 
-// ============================================
-// AUTH SERVICE
-// ============================================
-
 export class AuthService {
-  /**
-   * ✅ Login with email/username and password
-   */
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       console.log('🔐 AuthService: Attempting login...');
@@ -81,9 +84,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * ✅ Register new user
-   */
   static async register(data: RegisterData): Promise<AuthResponse> {
     try {
       console.log('📝 AuthService: Attempting registration...');
@@ -96,14 +96,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * ✅ Get current user profile
-   */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       console.log('👤 AuthService: Fetching user profile for:', userId);
       const response = await apiClient.get<ApiResponse<UserProfile>>(
-        `/profile/${userId}`
+        `/users/profile/${userId}`
       );
 
       if (response.data.status === 'success' && response.data.data) {
@@ -115,24 +112,21 @@ export class AuthService {
       return null;
     } catch (error) {
       console.error('❌ AuthService: Error fetching user profile:', error);
-      
+
       // If it's a 401/403, the token might be invalid
       if (error instanceof AxiosError) {
         if (error.response?.status === 401 || error.response?.status === 403) {
           console.warn('⚠️ AuthService: Unauthorized - token might be invalid');
         }
       }
-      
+
       return null;
     }
   }
 
-  /**
-   * ✅ Update basic user profile (after onboarding)
-   */
   static async updateProfile(
     userId: string,
-    data: UpdateProfileData
+    data: any
   ): Promise<AuthResponse> {
     try {
       console.log('📝 AuthService: Updating profile for user:', userId);
@@ -148,30 +142,24 @@ export class AuthService {
     }
   }
 
-  /**
-   * ✅ Complete profile setup (onboarding)
-   */
   static async completeProfileSetup(
     userId: string,
     data: any
   ): Promise<AuthResponse> {
     try {
-      console.log('📝 AuthService: Completing profile setup for user:', userId);
+      console.log('📝 Completing profile setup for user:', userId);
       const response = await apiClient.patch<AuthResponse>(
         `/users/${userId}/profile-setup`,
         data
       );
-      console.log('✅ AuthService: Profile setup completed');
+      console.log('✅ Profile setup request successful');
       return response.data;
     } catch (error) {
-      console.error('❌ AuthService: Profile setup failed');
+      console.error('❌ Profile setup request failed', error);
       return AuthService.handleError(error);
     }
   }
 
-  /**
-   * ✅ Check username availability
-   */
   static async checkUsernameAvailability(username: string): Promise<{
     available: boolean;
     message?: string;
@@ -212,9 +200,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * ✅ Change password
-   */
   static async changePassword(
     oldPassword: string,
     newPassword: string
@@ -267,59 +252,70 @@ export class AuthService {
     }
   }
 
-
   static async refreshToken(): Promise<AuthResponse> {
     try {
-      console.log('🔄 AuthService: Refreshing token...');
+      console.log('🔄 AuthService: Attempting to refresh token...');
       const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 
+      console.log(refreshToken);
+
       if (!refreshToken) {
-        console.warn('⚠️ AuthService: No refresh token available');
+        console.warn('⚠️ AuthService: No refresh token found in storage');
+        return { status: 'error', message: 'No refresh token available' };
+      }
+
+      // Call backend refresh endpoint
+      const response = await apiClient.post<AuthResponse>('/auth/refresh', {
+        refreshToken,
+      });
+
+      const { status, data } = response.data;
+
+      if (status === 'success' && data?.accessToken) {
+        console.log('✅ AuthService: Token refreshed successfully');
+
+        // Save the new access token
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.accessToken);
+
+        // Optionally, if backend sends new refresh token → update it too
+        if (data.refreshToken) {
+          await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+        }
+
         return {
-          status: 'error',
-          message: 'No refresh token available'
+          status: 'success',
+          message: 'Token refreshed successfully',
+          data,
         };
       }
 
-      const response = await apiClient.post<AuthResponse>(
-        '/auth/refresh',
-        { refreshToken }
-      );
-
-      // Save new token
-      if (response.data.status === 'success' && response.data.data?.token) {
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.AUTH_TOKEN,
-          response.data.data.token
-        );
-        console.log('✅ AuthService: Token refreshed and saved');
-      }
-
-      return response.data;
+      console.warn('⚠️ AuthService: Refresh endpoint did not return a new token');
+      return { status: 'error', message: 'Failed to refresh token' };
     } catch (error) {
-      console.error('❌ AuthService: Token refresh failed');
+      console.error('❌ AuthService: Token refresh failed:', error);
       return AuthService.handleError(error);
     }
   }
 
- 
   static async logout(): Promise<void> {
     try {
       console.log('👋 AuthService: Logging out...');
-      
-      // Optional: Call backend to invalidate token
-      // Don't await this - we want to clear local data regardless
-      apiClient.post('/auth/logout').catch(err => {
-        console.warn('⚠️ AuthService: Logout API call failed (non-critical):', err.message);
-      });
 
-      // Always clear local storage
       await AuthService.clearAuthData();
-      console.log('✅ AuthService: Logout complete');
 
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      if (userData) {
+        const user = JSON.parse(userData);
+        const quizCompletionKey = `@quiz_completion_${user.id}`;
+        await AsyncStorage.removeItem(quizCompletionKey);
+        console.log(`🧹 Quiz completion data cleared for user ${user.id}`);
+      }
+
+      console.log('✅ AuthService: Logout complete');
     } catch (error) {
       console.error('❌ AuthService: Logout error (clearing data anyway):', error);
-      // Force clear even if there's an error
+
+      // Force clear even if something fails
       try {
         await AuthService.clearAuthData();
       } catch (clearError) {
@@ -328,10 +324,11 @@ export class AuthService {
     }
   }
 
+
   static async clearAuthData(): Promise<void> {
     try {
       console.log('🧹 AuthService: Clearing auth data...');
-      
+
       await Promise.all([
         AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
         AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
@@ -345,58 +342,65 @@ export class AuthService {
     }
   }
 
-
   static async saveAuthData(
-    token: string, 
-    user: UserProfile, 
+    token: string,
+    user: UserProfile,
     refreshToken?: string
   ): Promise<void> {
     try {
-      console.log('💾 AuthService: Saving auth data...');
-      console.log('📊 Data to save:', {
-        hasToken: !!token,
-        hasUser: !!user,
-        hasRefreshToken: !!refreshToken,
+      console.log('💾 AuthService.saveAuthData called with:', {
+        token,
+        refreshToken,
         userId: user?.id,
-        userEmail: user?.email
+        userEmail: user?.email,
       });
 
       // Validate input
-      if (!token) {
-        throw new Error('Token is required');
+      if (!token || token.trim() === '') {
+        throw new Error('Access token is required');
       }
       if (!user || !user.id) {
         throw new Error('Valid user object is required');
       }
 
-      const saveOperations = [
+      // Save access token and user data
+      const saveOps = [
         AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token),
         AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user)),
       ];
 
-      if (refreshToken) {
-        saveOperations.push(
-          AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken)
-        );
+      // Save refresh token if provided
+      if (refreshToken && refreshToken.trim() !== '') {
+        saveOps.push(AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken));
+      } else {
+        console.warn('⚠️ No refresh token provided; skipping save.');
       }
 
-      await Promise.all(saveOperations);
-      
-      console.log('✅ AuthService: Auth data saved successfully');
-      
-      // Verify save
-      const verification = await AuthService.verifyAuthDataSaved();
-      if (!verification.success) {
-        console.error('❌ AuthService: Verification failed after save!');
+      await Promise.all(saveOps);
+      console.log('✅ AuthService: Auth data saved to AsyncStorage');
+
+      // Verify saved data
+      const [savedToken, savedUser, savedRefreshToken] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
+        AsyncStorage.getItem(STORAGE_KEYS.USER_DATA),
+        AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN),
+      ]);
+
+      if (!savedToken || !savedUser) {
+        console.error('❌ AuthService: Failed to verify saved token or user data!');
         throw new Error('Failed to verify saved auth data');
       }
 
+      console.log('🔍 Verification successful:', {
+        tokenSaved: !!savedToken,
+        userSaved: !!savedUser,
+        refreshTokenSaved: !!savedRefreshToken,
+      });
     } catch (error) {
       console.error('❌ AuthService: Error saving auth data:', error);
       throw error; // Re-throw so caller knows save failed
     }
   }
-
 
   static async verifyAuthDataSaved(): Promise<{
     success: boolean;
@@ -439,7 +443,6 @@ export class AuthService {
     }
   }
 
-
   static async getAuthData(): Promise<{
     token: string | null;
     user: UserProfile | null;
@@ -447,7 +450,7 @@ export class AuthService {
   }> {
     try {
       console.log('📖 AuthService: Reading auth data from storage...');
-      
+
       const [token, userData, refreshToken] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
         AsyncStorage.getItem(STORAGE_KEYS.USER_DATA),
@@ -455,7 +458,7 @@ export class AuthService {
       ]);
 
       let user: UserProfile | null = null;
-      
+
       if (userData) {
         try {
           user = JSON.parse(userData);
@@ -482,7 +485,6 @@ export class AuthService {
     }
   }
 
-
   static async isAuthenticated(): Promise<boolean> {
     try {
       const { token, user } = await AuthService.getAuthData();
@@ -494,7 +496,6 @@ export class AuthService {
       return false;
     }
   }
-
 
   private static handleError(error: unknown): AuthResponse {
     if (error instanceof AxiosError) {

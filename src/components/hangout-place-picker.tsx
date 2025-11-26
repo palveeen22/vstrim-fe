@@ -11,6 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
   FlatList,
+  SafeAreaView,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 
@@ -73,13 +74,13 @@ export const HangoutPlacePicker: React.FC<Props> = ({
     name?: string;
     address?: string;
   } | null>(null);
-  
+
   // ✅ Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  
+
   const mapRef = useRef<MapView>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -107,8 +108,8 @@ export const HangoutPlacePicker: React.FC<Props> = ({
       // Add location bias if user location is available
       if (userLocation) {
         url += `&viewbox=${userLocation.longitude - 0.1},${userLocation.latitude - 0.1},` +
-               `${userLocation.longitude + 0.1},${userLocation.latitude + 0.1}&` +
-               `bounded=1`;
+          `${userLocation.longitude + 0.1},${userLocation.latitude + 0.1}&` +
+          `bounded=1`;
       }
 
       const response = await fetch(url, {
@@ -124,7 +125,7 @@ export const HangoutPlacePicker: React.FC<Props> = ({
 
       const data: SearchResult[] = await response.json();
       console.log('✅ Found', data.length, 'results');
-      
+
       setSearchResults(data);
       setShowResults(true);
     } catch (error) {
@@ -169,7 +170,7 @@ export const HangoutPlacePicker: React.FC<Props> = ({
         result.address.city,
         result.address.state,
       ].filter(Boolean);
-      
+
       if (parts.length > 0) {
         formattedAddress = parts.join(', ');
       }
@@ -185,7 +186,7 @@ export const HangoutPlacePicker: React.FC<Props> = ({
     setSelectedLocation(location);
     setShowResults(false);
     setSearchQuery('');
-    
+
     // Animate map to selected location
     if (mapRef.current) {
       mapRef.current.animateToRegion({
@@ -300,256 +301,264 @@ export const HangoutPlacePicker: React.FC<Props> = ({
           setModalVisible(false);
           resetForm();
         }}>
-        <View style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-                resetForm();
-              }}
-              style={styles.headerButton}>
-              <Text style={styles.cancelButton}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Add Hangout Place</Text>
-            <TouchableOpacity
-              onPress={handleAddPlace}
-              style={styles.headerButton}
-              disabled={!selectedLocation}>
-              <Text style={[
-                styles.saveButton,
-                !selectedLocation && styles.saveButtonDisabled
-              ]}>
-                Add
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.modalContainer}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <TouchableOpacity
+                onPress={() => {
+                  setModalVisible(false);
+                  resetForm();
+                }}
+                style={styles.headerButton}>
+                <Text style={styles.cancelButton}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Add Hangout Place</Text>
+              <TouchableOpacity
+                onPress={handleAddPlace}
+                style={styles.headerButton}
+                disabled={!selectedLocation}>
+                <Text style={[
+                  styles.saveButton,
+                  !selectedLocation && styles.saveButtonDisabled
+                ]}>
+                  Add
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-          {/* Map */}
-          <View style={styles.mapContainer}>
-            <MapView
-              ref={mapRef}
-              provider={PROVIDER_DEFAULT}
-              style={styles.map}
-              initialRegion={initialRegion}
-              onPress={handleMapPress}
-              showsUserLocation
-              showsMyLocationButton>
-              
-              {/* User Location Marker */}
-              {userLocation && (
-                <Marker
-                  coordinate={userLocation}
-                  title="Your Location"
-                  pinColor="blue"
-                />
-              )}
+            {/* Map */}
+            <View style={styles.mapContainer}>
+              <MapView
+                ref={mapRef}
+                provider={PROVIDER_DEFAULT}
+                style={styles.map}
+                initialRegion={initialRegion}
+                onPress={handleMapPress}
+                showsUserLocation
+                showsMyLocationButton>
 
-              {/* Selected Location Marker */}
-              {selectedLocation && (
-                <Marker
-                  coordinate={{
-                    latitude: selectedLocation.latitude,
-                    longitude: selectedLocation.longitude,
-                  }}
-                  title={selectedLocation.name}
-                  description={selectedLocation.address}
-                  pinColor="red"
-                />
-              )}
+                {/* User Location Marker */}
+                {userLocation && (
+                  <Marker
+                    coordinate={userLocation}
+                    title="Your Location"
+                    pinColor="blue"
+                  />
+                )}
 
-              {/* Existing Places Markers */}
-              {places.map((place, index) => (
-                <Marker
-                  key={index}
-                  coordinate={{
-                    latitude: place.latitude,
-                    longitude: place.longitude,
-                  }}
-                  title={place.placeName}
-                  description={place.address}
-                  pinColor="green"
-                />
-              ))}
-            </MapView>
+                {/* Selected Location Marker */}
+                {selectedLocation && (
+                  <Marker
+                    coordinate={{
+                      latitude: selectedLocation.latitude,
+                      longitude: selectedLocation.longitude,
+                    }}
+                    title={selectedLocation.name}
+                    description={selectedLocation.address}
+                    pinColor="red"
+                  />
+                )}
 
-            {/* Search Overlay */}
-            <View style={styles.searchOverlay}>
-              {/* Place Type Selection */}
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.typeScrollView}
-                contentContainerStyle={styles.typeScrollContent}>
-                {PLACE_TYPES.map((type) => (
+                {/* Existing Places Markers */}
+                {places.map((place, index) => (
+                  <Marker
+                    key={index}
+                    coordinate={{
+                      latitude: place.latitude,
+                      longitude: place.longitude,
+                    }}
+                    title={place.placeName}
+                    description={place.address}
+                    pinColor="green"
+                  />
+                ))}
+              </MapView>
+
+              {/* Search Overlay */}
+              <View style={styles.searchOverlay}>
+                {/* Place Type Selection */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.typeScrollView}
+                  contentContainerStyle={styles.typeScrollContent}>
+                  {PLACE_TYPES.map((type) => (
+                    <TouchableOpacity
+                      key={type.value}
+                      style={[
+                        styles.typeChip,
+                        selectedType === type.value && styles.typeChipActive,
+                      ]}
+                      onPress={() => setSelectedType(type.value)}>
+                      <Text style={styles.typeChipIcon}>{type.icon}</Text>
+                      <Text style={[
+                        styles.typeChipLabel,
+                        selectedType === type.value && styles.typeChipLabelActive,
+                      ]}>
+                        {type.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {/* Search Method Toggle */}
+                <View style={styles.methodToggle}>
                   <TouchableOpacity
-                    key={type.value}
                     style={[
-                      styles.typeChip,
-                      selectedType === type.value && styles.typeChipActive,
+                      styles.methodButton,
+                      !manualEntry && styles.methodButtonActive,
                     ]}
-                    onPress={() => setSelectedType(type.value)}>
-                    <Text style={styles.typeChipIcon}>{type.icon}</Text>
-                    <Text style={[
-                      styles.typeChipLabel,
-                      selectedType === type.value && styles.typeChipLabelActive,
-                    ]}>
-                      {type.label}
+                    onPress={() => {
+                      setManualEntry(false);
+                      setShowResults(false);
+                    }}>
+                    <Text
+                      style={[
+                        styles.methodButtonText,
+                        !manualEntry && styles.methodButtonTextActive,
+                      ]}>
+                      🔍 Search
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              {/* Search Method Toggle */}
-              <View style={styles.methodToggle}>
-                <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    !manualEntry && styles.methodButtonActive,
-                  ]}
-                  onPress={() => {
-                    setManualEntry(false);
-                    setShowResults(false);
-                  }}>
-                  <Text
+                  <TouchableOpacity
                     style={[
-                      styles.methodButtonText,
-                      !manualEntry && styles.methodButtonTextActive,
-                    ]}>
-                    🔍 Search
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.methodButton,
-                    manualEntry && styles.methodButtonActive,
-                  ]}
-                  onPress={() => {
-                    setManualEntry(true);
-                    setShowResults(false);
-                    setSearchQuery('');
-                  }}>
-                  <Text
-                    style={[
-                      styles.methodButtonText,
-                      manualEntry && styles.methodButtonTextActive,
-                    ]}>
-                    📍 Pin on Map
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                      styles.methodButton,
+                      manualEntry && styles.methodButtonActive,
+                    ]}
+                    onPress={() => {
+                      setManualEntry(true);
+                      setShowResults(false);
+                      setSearchQuery('');
+                    }}>
+                    <Text
+                      style={[
+                        styles.methodButtonText,
+                        manualEntry && styles.methodButtonTextActive,
+                      ]}>
+                      📍 Pin on Map
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-              {/* ✅ Custom Search Input (Nominatim) */}
-              {!manualEntry && (
-                <View style={styles.searchContainer}>
-                  <View style={styles.searchInputContainer}>
-                    <Text style={styles.searchIcon}>🔍</Text>
-                    <TextInput
-                      style={styles.searchInput}
-                      placeholder="Search for a place..."
-                      placeholderTextColor="#9CA3AF"
-                      value={searchQuery}
-                      onChangeText={handleSearchChange}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                    {isSearching && (
-                      <ActivityIndicator size="small" color="#8B5CF6" />
+                {/* ✅ Custom Search Input (Nominatim) */}
+                {!manualEntry && (
+                  <View style={styles.searchContainer}>
+                    <View style={styles.searchInputContainer}>
+                      <Text style={styles.searchIcon}>🔍</Text>
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search for a place..."
+                        placeholderTextColor="#9CA3AF"
+                        value={searchQuery}
+                        onChangeText={handleSearchChange}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                      {isSearching && (
+                        <ActivityIndicator size="small" color="#8B5CF6" />
+                      )}
+                      {searchQuery.length > 0 && !isSearching && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSearchQuery('');
+                            setSearchResults([]);
+                            setShowResults(false);
+                          }}
+                          style={styles.clearButton}>
+                          <Text style={styles.clearButtonText}>✕</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* ✅ Search Results List */}
+                    {showResults && searchResults.length > 0 && (
+                      <View style={styles.searchResults}>
+                        <FlatList
+                          data={searchResults}
+                          keyExtractor={(item) => item.place_id}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity
+                              style={styles.searchResultItem}
+                              onPress={() => handleSearchResultSelect(item)}>
+                              <Text style={styles.resultIcon}>📍</Text>
+                              <View style={styles.resultText}>
+                                <Text style={styles.resultName} numberOfLines={1}>
+                                  {item.name || item.display_name.split(',')[0]}
+                                </Text>
+                                <Text style={styles.resultAddress} numberOfLines={2}>
+                                  {item.display_name}
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          )}
+                          style={styles.resultsList}
+                          keyboardShouldPersistTaps="handled"
+                        />
+                      </View>
                     )}
-                    {searchQuery.length > 0 && !isSearching && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                          setShowResults(false);
-                        }}
-                        style={styles.clearButton}>
-                        <Text style={styles.clearButtonText}>✕</Text>
-                      </TouchableOpacity>
+
+                    {/* No results message */}
+                    {showResults && searchResults.length === 0 && !isSearching && searchQuery.length >= 3 && (
+                      <View style={styles.noResults}>
+                        <Text style={styles.noResultsText}>
+                          No places found for "{searchQuery}"
+                        </Text>
+                      </View>
                     )}
                   </View>
+                )}
 
-                  {/* ✅ Search Results List */}
-                  {showResults && searchResults.length > 0 && (
-                    <View style={styles.searchResults}>
-                      <FlatList
-                        data={searchResults}
-                        keyExtractor={(item) => item.place_id}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={styles.searchResultItem}
-                            onPress={() => handleSearchResultSelect(item)}>
-                            <Text style={styles.resultIcon}>📍</Text>
-                            <View style={styles.resultText}>
-                              <Text style={styles.resultName} numberOfLines={1}>
-                                {item.name || item.display_name.split(',')[0]}
-                              </Text>
-                              <Text style={styles.resultAddress} numberOfLines={2}>
-                                {item.display_name}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        )}
-                        style={styles.resultsList}
-                        keyboardShouldPersistTaps="handled"
-                      />
-                    </View>
-                  )}
+                {/* Manual Entry Hint */}
+                {manualEntry && (
+                  <View style={styles.manualHint}>
+                    <Text style={styles.manualHintText}>
+                      📍 Tap anywhere on the map to select a location
+                    </Text>
+                  </View>
+                )}
+              </View>
 
-                  {/* No results message */}
-                  {showResults && searchResults.length === 0 && !isSearching && searchQuery.length >= 3 && (
-                    <View style={styles.noResults}>
-                      <Text style={styles.noResultsText}>
-                        No places found for "{searchQuery}"
+              {/* Selected Location Info */}
+              {selectedLocation && (
+                <View style={styles.selectedInfoCard}>
+                  <View style={styles.selectedInfoContent}>
+                    <Text style={styles.selectedInfoIcon}>
+                      {getPlaceTypeIcon(selectedType)}
+                    </Text>
+                    <View style={styles.selectedInfoText}>
+                      <Text style={styles.selectedInfoName}>
+                        {selectedLocation.name || 'Selected Location'}
+                      </Text>
+                      {selectedLocation.address && (
+                        <Text style={styles.selectedInfoAddress} numberOfLines={2}>
+                          {selectedLocation.address}
+                        </Text>
+                      )}
+                      <Text style={styles.selectedInfoCoords}>
+                        {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
                       </Text>
                     </View>
-                  )}
-                </View>
-              )}
-
-              {/* Manual Entry Hint */}
-              {manualEntry && (
-                <View style={styles.manualHint}>
-                  <Text style={styles.manualHintText}>
-                    📍 Tap anywhere on the map to select a location
-                  </Text>
+                  </View>
                 </View>
               )}
             </View>
-
-            {/* Selected Location Info */}
-            {selectedLocation && (
-              <View style={styles.selectedInfoCard}>
-                <View style={styles.selectedInfoContent}>
-                  <Text style={styles.selectedInfoIcon}>
-                    {getPlaceTypeIcon(selectedType)}
-                  </Text>
-                  <View style={styles.selectedInfoText}>
-                    <Text style={styles.selectedInfoName}>
-                      {selectedLocation.name || 'Selected Location'}
-                    </Text>
-                    {selectedLocation.address && (
-                      <Text style={styles.selectedInfoAddress} numberOfLines={2}>
-                        {selectedLocation.address}
-                      </Text>
-                    )}
-                    <Text style={styles.selectedInfoCoords}>
-                      {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
   container: {
-    marginTop: 16,
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16
   },
   placesList: {
     gap: 12,

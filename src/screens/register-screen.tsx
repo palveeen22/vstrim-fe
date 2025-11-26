@@ -25,18 +25,12 @@ type TProps = {
 
 const RegisterScreen = ({ navigation }: TProps) => {
   const { register } = useAuth()
-  const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const handleRegister = async () => {
-    // Validation
-    if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your name');
-      return;
-    }
 
     if (!email.trim()) {
       Alert.alert('Error', 'Please enter your email');
@@ -59,7 +53,6 @@ const RegisterScreen = ({ navigation }: TProps) => {
 
     try {
       const result = await register({
-        name: name.toLowerCase(),
         email: email,
         password: password,
       });
@@ -123,18 +116,6 @@ const RegisterScreen = ({ navigation }: TProps) => {
 
           {/* Form */}
           <View style={styles.formContainer}>
-            {/* Name Input */}
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Name"
-                placeholderTextColor="#9CA3AF"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                returnKeyType="next"
-              />
-            </View>
 
             {/* Email Input */}
             <View style={styles.inputWrapper}>

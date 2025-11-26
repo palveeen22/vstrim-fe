@@ -2468,6 +2468,10 @@ PODS:
     - React-perflogger (= 0.81.4)
     - React-utils (= 0.81.4)
     - SocketRocket
+  - rive-react-native (9.7.0):
+    - React-Core
+    - RiveRuntime (= 6.12.1)
+  - RiveRuntime (6.12.1)
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -2752,6 +2756,7 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - rive-react-native (from `../node_modules/rive-react-native`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -2768,6 +2773,7 @@ SPEC REPOS:
     - MapboxCoreMaps
     - MapboxMaps
     - MapboxMobileEvents
+    - RiveRuntime
     - SocketRocket
     - Turf
 
@@ -2923,6 +2929,8 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  rive-react-native:
+    :path: "../node_modules/rive-react-native"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCMaskedView:
@@ -3019,6 +3027,8 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: b20fba6c3d091a393925890009999472c8f94d95
   ReactCodegen: 58dc2eb138a27145826ad7d5568610159dfcadee
   ReactCommon: 00df7b9f859c9d02181844255bb89a8bca544374
+  rive-react-native: efc902454ab716af375cbe211d6cd70f8975240e
+  RiveRuntime: a98b3a310942195c6f8810306bfbaa0ac15674b1
   RNCAsyncStorage: 302f2fac014fd450046c120567ca364632da682b
   RNCMaskedView: 63268de1986a098b5f4d1fb5b1bc1e97fade0aee
   RNGestureHandler: 4f7cc97a71d4fe0fcba38c94acdd969f5f17c91c

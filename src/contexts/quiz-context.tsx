@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QuizService, QuizQuestion, ApiResponse, SubmitQuizPayload } from '../services/quiz-service';
-
-// Storage key
-const QUIZ_COMPLETION_KEY = '@quiz_completion';
+import { getQuizCompletionKey } from '../utils';
+import { STORAGE_KEYS } from '../constants';
+import { useAuth } from './auth-context';
 
 // Context State Interface
 interface QuizState {
@@ -58,6 +58,7 @@ interface QuizProviderProps {
 
 // Provider Component
 export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
+  const { user: whoLogin, setUser } = useAuth()
   const [state, setState] = useState<QuizState>(initialState);
 
   // ✅ Load completion data saat app start
@@ -65,55 +66,63 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     loadCompletionData();
   }, []);
 
-  // 📦 Load & Validate dari AsyncStorage
+
   const loadCompletionData = async () => {
     try {
-      const data = await AsyncStorage.getItem(QUIZ_COMPLETION_KEY);
-      
+      const userData = await AsyncStorage.getItem('@vstrim_user_data');
+      if (!userData) {
+        console.log('⚠️ No user data found, skipping quiz completion load');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const key = getQuizCompletionKey(user.id);
+
+      const data = await AsyncStorage.getItem(key);
+
       if (data) {
         const parsed: QuizCompletionData = JSON.parse(data);
         const completedDate = new Date(parsed.completedAt);
         const today = new Date();
-        
-        // Reset time to compare dates only
         completedDate.setHours(0, 0, 0, 0);
         today.setHours(0, 0, 0, 0);
-        
-        // ✅ Check if completion is from today
+
         if (completedDate.getTime() === today.getTime()) {
-          // Still valid - restore state
           setState(prev => ({
             ...prev,
             isCompleted: parsed.isCompleted,
             completedAt: new Date(parsed.completedAt),
             dailyQuizId: parsed.dailyQuizId,
           }));
-          
-          console.log('✅ Quiz completion restored from storage (today)');
+          console.log(`✅ Quiz completion restored for user ${user.id}`);
         } else {
-          // Different day - clear storage
-          await AsyncStorage.removeItem(QUIZ_COMPLETION_KEY);
-          console.log('🗑️ Old quiz completion cleared (different day)');
+          await AsyncStorage.removeItem(key);
+          console.log(`🗑️ Old quiz completion cleared for user ${user.id}`);
         }
       } else {
-        console.log('📭 No saved quiz completion found');
+        console.log(`📭 No saved quiz completion found for user ${user.id}`);
       }
     } catch (error) {
       console.error('❌ Failed to load completion data:', error);
     }
   };
 
-  // 💾 Save completion data ke AsyncStorage
+
   const saveCompletionData = async (data: QuizCompletionData) => {
     try {
-      await AsyncStorage.setItem(QUIZ_COMPLETION_KEY, JSON.stringify(data));
-      console.log('💾 Quiz completion saved to storage');
+      const userData = await AsyncStorage.getItem('@vstrim_user_data');
+      if (!userData) return;
+      const user = JSON.parse(userData);
+      const key = getQuizCompletionKey(user.id);
+
+      await AsyncStorage.setItem(key, JSON.stringify(data));
+      console.log(`💾 Quiz completion saved for user ${user.id}`);
     } catch (error) {
       console.error('❌ Failed to save completion data:', error);
     }
   };
 
-  // Fetch daily quiz
+
   const fetchQuiz = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
@@ -150,7 +159,6 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     }
   }, []);
 
-  // Answer a question
   const answerQuestion = useCallback((questionId: string, optionIds: string[]) => {
     setState(prev => {
       const newAnswers = new Map(prev.answers);
@@ -163,7 +171,6 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     });
   }, []);
 
-  // Navigate to next question
   const nextQuestion = useCallback(() => {
     setState(prev => {
       if (prev.currentQuestionIndex < prev.questions.length - 1) {
@@ -176,7 +183,6 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     });
   }, []);
 
-  // Navigate to previous question
   const previousQuestion = useCallback(() => {
     setState(prev => {
       if (prev.currentQuestionIndex > 0) {
@@ -189,24 +195,28 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     });
   }, []);
 
-  // Reset quiz to initial state
   const resetQuiz = useCallback(async () => {
-    setState(initialState);
-    await AsyncStorage.removeItem(QUIZ_COMPLETION_KEY);
-    console.log('🔄 Quiz reset');
+    try {
+      const userData = await AsyncStorage.getItem('@vstrim_user_data');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const key = getQuizCompletionKey(user.id);
+        await AsyncStorage.removeItem(key);
+        console.log(`🔄 Quiz reset for user ${user.id}`);
+      }
+      setState(initialState);
+    } catch (error) {
+      console.error('❌ Failed to reset quiz:', error);
+    }
   }, []);
 
-  // ✅ Submit quiz - Save to AsyncStorage immediately
+
   const submitQuiz = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Convert Map to array of objects for API submission
       const answersArray = Array.from(state.answers.entries()).map(
-        ([questionId, selectedOptions]) => ({
-          questionId,
-          selectedOptions,
-        })
+        ([questionId, selectedOptions]) => ({ questionId, selectedOptions })
       );
 
       const payload: SubmitQuizPayload = { answers: answersArray };
@@ -218,25 +228,24 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
       console.log('Submit response:', response);
 
       if (response?.status === 'success' && response.data) {
-        const { 
-          isCompleted, 
-          dailyQuizId, 
+        const {
+          isCompleted,
+          dailyQuizId,
           completedAt,
           totalQuestions,
-          answeredQuestions 
+          answeredQuestions,
+          user: updatedUser,
         } = response.data;
 
-        // ✅ Prepare data untuk AsyncStorage
+        // Save completion data ke AsyncStorage
         const completionData: QuizCompletionData = {
           isCompleted,
           completedAt,
           dailyQuizId,
         };
-
-        // ✅ Save to AsyncStorage IMMEDIATELY
         await saveCompletionData(completionData);
 
-        // ✅ Update state
+        // Update state quiz
         setState(prev => ({
           ...prev,
           isLoading: false,
@@ -245,6 +254,21 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
           dailyQuizId,
           error: null,
         }));
+
+        // 🔄 Update profile global (AuthContext)
+        if (updatedUser) {
+          setUser(prevUser => ({
+            ...prevUser,
+            ...updatedUser,
+          }));
+
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.USER_DATA,
+            JSON.stringify(updatedUser)
+          );
+
+          console.log('✅ User profile updated after quiz submit');
+        }
 
         console.log('✅ Quiz completed and saved:', {
           dailyQuizId,
@@ -267,19 +291,24 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
         error: 'Failed to submit quiz',
       }));
     }
-  }, [state.answers]);
+  }, [state.answers, setUser]);
 
-  // Get current question
+
   const getCurrentQuestion = useCallback((): QuizQuestion | null => {
     if (state.questions.length === 0) return null;
     return state.questions[state.currentQuestionIndex] || null;
   }, [state.questions, state.currentQuestionIndex]);
 
-  // Calculate progress percentage
   const getProgress = useCallback((): number => {
     if (state.questions.length === 0) return 0;
     return Math.round((state.answers.size / state.questions.length) * 100);
   }, [state.questions.length, state.answers.size]);
+
+  useEffect(() => {
+    if (whoLogin?.id) {
+      resetQuiz();
+    }
+  }, [whoLogin?.id, resetQuiz]);
 
   const value: QuizContextValue = {
     ...state,

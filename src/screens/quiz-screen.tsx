@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,184 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useQuiz } from '../contexts/quiz-context';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+
+// Confetti particle component
+const ConfettiParticle = ({ delay, duration }: { delay: number; duration: number }) => {
+  const translateY = useRef(new Animated.Value(-100)).current;
+  const translateX = useRef(new Animated.Value(Math.random() * width)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: height + 100,
+        duration: duration,
+        delay: delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotate, {
+        toValue: Math.random() > 0.5 ? 360 : -360,
+        duration: duration,
+        delay: delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: duration * 0.7,
+        delay: delay + duration * 0.3,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [delay, duration, translateY, rotate, opacity]);
+
+  const colors = ['#FFA726', '#FF6B35', '#FFD93D', '#6BCF7F', '#4ECDC4', '#C77DFF'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  return (
+    <Animated.View
+      style={[
+        styles.confetti,
+        {
+          backgroundColor: randomColor,
+          transform: [
+            { translateX },
+            { translateY },
+            { rotate: rotate.interpolate({ inputRange: [0, 360], outputRange: ['0deg', '360deg'] }) },
+          ],
+          opacity,
+        },
+      ]}
+    />
+  );
+};
+
+// Success overlay component with fire animation
+const SuccessOverlay = ({ onComplete }: { onComplete: () => void }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const fireScale = useRef(new Animated.Value(0.8)).current;
+  const fireOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Background fade in
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // Scale up animation
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
+
+    // Fire animation - pulse effect
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(fireScale, {
+            toValue: 1.2,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fireOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(fireScale, {
+            toValue: 0.8,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fireOpacity, {
+            toValue: 0.8,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    ).start();
+
+    // Auto close after 3 seconds
+    const timer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => onComplete());
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [fadeAnim, scaleAnim, fireScale, fireOpacity, onComplete]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.successOverlay,
+        {
+          opacity: fadeAnim,
+        },
+      ]}
+    >
+      {/* Confetti particles */}
+      {[...Array(30)].map((_, index) => (
+        <ConfettiParticle
+          key={index}
+          delay={index * 50}
+          duration={2000 + Math.random() * 1000}
+        />
+      ))}
+
+      {/* Success content */}
+      <Animated.View
+        style={[
+          styles.successContent,
+          {
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
+        {/* Fire animation */}
+        <Animated.View
+          style={[
+            styles.fireContainer,
+            {
+              transform: [{ scale: fireScale }],
+              opacity: fireOpacity,
+            },
+          ]}
+        >
+          <View style={styles.fireBase}>
+            <Icon name="flame" size={120} color="#FF6B35" />
+          </View>
+          {/* Fire glow effect */}
+          <View style={styles.fireGlow} />
+        </Animated.View>
+
+        {/* Success text */}
+        <View style={styles.successTextContainer}>
+          <Text style={styles.successTitle}>🎉 Amazing!</Text>
+          <Text style={styles.successSubtitle}>Quiz completed successfully!</Text>
+          <Text style={styles.successMessage}>You're on fire! Keep it up! 🔥</Text>
+        </View>
+
+        {/* Streak counter (optional - can be dynamic) */}
+        <View style={styles.streakContainer}>
+          <Icon name="flame" size={24} color="#FFA726" />
+          <Text style={styles.streakText}>+1 Day Streak!</Text>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+};
 
 const QuizScreen = ({ navigation }: any) => {
   const {
@@ -24,6 +201,7 @@ const QuizScreen = ({ navigation }: any) => {
     isLoading,
     error,
     fetchQuiz,
+    resetQuiz,
     answerQuestion,
     nextQuestion,
     previousQuestion,
@@ -33,11 +211,13 @@ const QuizScreen = ({ navigation }: any) => {
   } = useQuiz();
 
   const [slideAnim] = useState(new Animated.Value(0));
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch quiz on mount
   useEffect(() => {
+    resetQuiz();
     fetchQuiz();
-  }, [fetchQuiz]);
+  }, [fetchQuiz, resetQuiz]);
 
   const currentQuestion = getCurrentQuestion();
   const progress = getProgress();
@@ -88,7 +268,7 @@ const QuizScreen = ({ navigation }: any) => {
 
       nextQuestion();
     } else {
-      // Quiz completed
+      // Quiz completed - show success animation
       handleComplete();
     }
   };
@@ -113,15 +293,13 @@ const QuizScreen = ({ navigation }: any) => {
     }
   };
 
-  // Skip question
-  // const handleSkip = () => {
-  //   handleNext();
-  // };
-
   // Complete quiz
   const handleComplete = async () => {
     try {
       await submitQuiz();
+
+      // Show success animation
+      setShowSuccess(true);
 
       // Convert Map to array for navigation
       const answersArray = Array.from(answers.entries()).map(([questionId, selectedOptions]) => ({
@@ -130,10 +308,17 @@ const QuizScreen = ({ navigation }: any) => {
       }));
 
       console.log('Quiz completed:', answersArray);
-      // navigation.navigate('Match');
     } catch (err) {
       console.error('Failed to submit quiz:', err);
     }
+  };
+
+  // Handle success animation completion
+  const handleSuccessComplete = () => {
+    setShowSuccess(false);
+    // Navigate to next screen or back
+    // navigation.navigate('Match');
+    navigation.goBack();
   };
 
   // Loading state
@@ -191,22 +376,11 @@ const QuizScreen = ({ navigation }: any) => {
 
       {/* Header */}
       <View style={styles.header}>
-        {/* <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.closeButton}
-        >
-          <Icon name="close" size={24} color="#1F2937" />
-        </TouchableOpacity> */}
-
         <View style={styles.progressContainer}>
           <Text style={styles.progressText}>
             {currentQuestionIndex + 1} of {questions.length}
           </Text>
         </View>
-
-        {/* <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity> */}
       </View>
 
       {/* Progress Bar */}
@@ -335,6 +509,9 @@ const QuizScreen = ({ navigation }: any) => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Success Overlay */}
+      {showSuccess && <SuccessOverlay onComplete={handleSuccessComplete} />}
     </SafeAreaView>
   );
 };
@@ -407,12 +584,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  // closeButton: {
-  //   width: 40,
-  //   height: 40,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
   progressContainer: {
     flex: 1,
     alignItems: 'center',
@@ -422,15 +593,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6B7280',
   },
-  // skipButton: {
-  //   paddingHorizontal: 12,
-  //   paddingVertical: 8,
-  // },
-  // skipText: {
-  //   fontSize: 14,
-  //   fontWeight: '600',
-  //   color: '#FF6B35',
-  // },
   progressBarContainer: {
     height: 4,
     backgroundColor: '#F3F4F6',
@@ -574,6 +736,83 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
   },
+  // Success overlay styles
+  successOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  confetti: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  successContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  fireContainer: {
+    position: 'relative',
+    marginBottom: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fireBase: {
+    zIndex: 2,
+  },
+  fireGlow: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: '#FF6B35',
+    opacity: 0.3,
+    zIndex: 1,
+  },
+  successTextContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  successTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFA726',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  successMessage: {
+    fontSize: 16,
+    color: '#D1D5DB',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 167, 38, 0.2)',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: '#FFA726',
+  },
+  streakText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFA726',
+  },
 });
 
-export default QuizScreen
+export default QuizScreen;

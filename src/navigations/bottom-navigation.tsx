@@ -6,7 +6,7 @@ import ChatListScreen from '../screens/chat-screen';
 import QuizScreen from '../screens/quiz-screen';
 import MapExploreScreen from '../screens/map-screen';
 import MatchScreen from '../screens/match-screen';
-import { useQuiz } from '../contexts/quiz-context';
+import { useAuth } from '../contexts/auth-context';
 
 
 // Type definitions for the bottom tab navigator
@@ -39,26 +39,26 @@ const TabBarIcon = ({ name, focused }: { name: string; focused: boolean }) => {
 // Main bottom tab navigator
 const BottomTabNavigation = () => {
   // ✅ Ambil data dari quiz context
-  const { isCompleted, completedAt } = useQuiz();
+  const { user } = useAuth()
 
   // ✅ Check apakah quiz hari ini sudah selesai
   const hasCompletedTodayQuiz = useMemo(() => {
-    if (!isCompleted || !completedAt) {
-      return false;
-    }
+    if (!user?.dailyQuizzes) return false;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const quizDate = new Date(completedAt);
-    quizDate.setHours(0, 0, 0, 0);
+    return user.dailyQuizzes.some(dq => {
+      const quizDate = new Date(dq.createdAt);
+      quizDate.setHours(0, 0, 0, 0);
+      return quizDate.getTime() === today.getTime() && dq.isCompleted;
+    });
+  }, [user?.dailyQuizzes]);
 
-    return quizDate.getTime() === today.getTime();
-  }, [isCompleted, completedAt]);
 
   console.log('Has completed today quiz:', hasCompletedTodayQuiz);
 
-
+  console.log(user);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

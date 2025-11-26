@@ -1,4 +1,3 @@
-// contexts/auth-context.tsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -20,54 +19,65 @@ type UsernameCheckResult = {
   message?: string;
 };
 
-type ProfileSetupData = {
-  username: string;
-  mood: string;
-  interests: string[];
-  joinReasons: string[];
-  coordinates: {
-    latitude: number;
-    longitude: number;
-    city?: string;
-    district?: string;
+export interface AuthResponse {
+  status: 'success' | 'error';
+  message?: string;
+  data?: {
+    accessToken: string;
+    refreshToken?: string;
+    user: UserProfile;
+    requiresProfileSetup?: boolean;
   };
-  hangoutPlaces: Array<{
-    placeName: string;
-    placeType: string;
-    latitude: number;
-    longitude: number;
-    address?: string;
-  }>;
-};
+}
+
+// type ProfileSetupData = {
+//   username: string;
+//   mood: string;
+//   interests: string[];
+//   joinReasons: string[];
+//   coordinates: {
+//     latitude: number;
+//     longitude: number;
+//     city?: string;
+//     district?: string;
+//   };
+//   hangoutPlaces: Array<{
+//     placeName: string;
+//     placeType: string;
+//     latitude: number;
+//     longitude: number;
+//     address?: string;
+//   }>;
+// };
 
 type AuthContextType = {
   isLoading: boolean;
   isLoggedIn: boolean;
   user: UserProfile | null;
   login: (credentials: LoginCredentials) => Promise<AuthResult>;
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   register: (data: RegisterData) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  refreshUserProfile: () => Promise<void>;
+  refreshUserProfile: () => Promise<any | null | undefined>;
   updateProfile: (data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
-  completeProfileSetup: (data: ProfileSetupData) => Promise<AuthResult>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<AuthResult>;
   checkUsernameAvailability: (username: string) => Promise<UsernameCheckResult>;
-  profileRegistration: (data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
+  completeProfileSetup: (data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
 };
 
 const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isLoggedIn: false,
   user: null,
+  setUser: () => { },
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
   logout: async () => { },
   refreshUserProfile: async () => { },
   updateProfile: async () => ({ success: false }),
-  completeProfileSetup: async () => ({ success: false }),
   changePassword: async () => ({ success: false }),
   checkUsernameAvailability: async () => ({ available: false }),
-  profileRegistration: async () => ({ success: false }),
+  completeProfileSetup: async () => ({ success: false }),
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -80,99 +90,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     initializeAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initializeAuth = async () => {
     console.log('=== 🔍 AUTH INIT START ===');
-    
+
     try {
-      // ✅ Step 1: Check if token exists in storage
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
       const userDataString = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
 
-      console.log('🔑 Token exists:', !!token);
-      console.log('👤 User data exists:', !!userDataString);
+      if (!token && refreshToken) {
+        // ✅ Jika ada refresh token tapi token access habis
+        console.log('🔄 Refresh token found, attempting to refresh access token...');
+        const refreshResponse = await AuthService.refreshToken();
 
-      // ✅ Step 2: If no token or user data, user is not logged in
-      if (!token || !userDataString) {
-        console.log('⚠️ No auth session found - user not logged in');
+        if (refreshResponse.status === 'success' && refreshResponse.data?.accessToken) {
+          console.log('✅ Token refreshed on init');
+          await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, refreshResponse.data.accessToken);
+        } else {
+          console.warn('⚠️ Failed to refresh token, clearing auth data');
+          await AuthService.clearAuthData();
+          setIsLoggedIn(false);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (!userDataString) {
+        console.log('⚠️ No user data found, user not logged in');
         setIsLoggedIn(false);
         setUser(null);
         setIsLoading(false);
         return;
       }
 
-      // ✅ Step 3: Parse user data from storage
-      let userData: UserProfile;
-      try {
-        userData = JSON.parse(userDataString);
-        console.log('✅ User data parsed:', userData.email);
-      } catch (parseError) {
-        console.error('❌ Failed to parse user data:', parseError);
-        // Data corrupt, clear storage
-        await AuthService.clearAuthData();
-        setIsLoggedIn(false);
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      // ✅ Step 4: Set user as logged in with cached data FIRST
-      console.log('✅ Setting user as logged in with cached data');
+      const userData: UserProfile = JSON.parse(userDataString);
       setUser(userData);
       setIsLoggedIn(true);
 
-      // ✅ Step 5: Try to refresh from server (optional, don't fail if this errors)
-      try {
-        console.log('🔄 Attempting to refresh profile from server...');
-        const freshUserData = await AuthService.getUserProfile(userData.id);
-
-        if (freshUserData) {
-          console.log('✅ Profile refreshed from server');
-          setUser(freshUserData);
-
-          // Update storage with fresh data
-          await AsyncStorage.setItem(
-            STORAGE_KEYS.USER_DATA,
-            JSON.stringify(freshUserData)
-          );
-        } else {
-          console.log('⚠️ Server returned no data, keeping cached profile');
-        }
-      } catch (refreshError) {
-        // ✅ IMPORTANT: Don't logout user if refresh fails!
-        // Network issues shouldn't invalidate a valid session
-        console.warn('⚠️ Could not refresh from server (using cached data):', refreshError);
-        // User stays logged in with cached data
+      // Optional: refresh profile from server
+      const freshUserData = await AuthService.getUserProfile(userData.id);
+      if (freshUserData) {
+        setUser(freshUserData);
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(freshUserData));
       }
 
     } catch (error) {
-      console.error('❌ Auth initialization error:', error);
-      
-      // ✅ Only clear auth if storage is completely broken
-      // Don't clear auth just because of network issues
-      try {
-        const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        if (token) {
-          console.log('⚠️ Error occurred but token exists, keeping user logged in');
-          // Keep user logged in if token exists
-          return;
-        }
-      } catch (storageError) {
-        console.error('❌ Storage access error:', storageError);
-      }
-      
-      // Only if we truly can't access storage or no token
+      console.error('❌ AUTH INIT ERROR', error);
+      await AuthService.clearAuthData();
       setIsLoggedIn(false);
       setUser(null);
     } finally {
       setIsLoading(false);
-      console.log('=== ✅ AUTH INIT END ===', { 
-        isLoggedIn, 
-        hasUser: !!user,
-        userEmail: user?.email 
-      });
     }
   };
 
@@ -183,18 +154,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const response = await AuthService.login(credentials);
 
+      console.log(response);
+
       if (response.status === 'success' && response.data) {
-        const { token, user: userData, refreshToken, requiresProfileSetup } = response.data;
+        const { accessToken, user: userData, refreshToken, requiresProfileSetup } = response.data;
 
         console.log('✅ Login API successful, saving auth data...');
 
         // ✅ CRITICAL: Await to ensure data is saved before proceeding
-        await AuthService.saveAuthData(token, userData, refreshToken);
+        await AuthService.saveAuthData(accessToken, userData, refreshToken);
 
         // ✅ Verify data was actually saved
         const savedToken = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         const savedUser = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-        
+
         console.log('🔍 Verification - Token saved:', !!savedToken);
         console.log('🔍 Verification - User saved:', !!savedUser);
 
@@ -241,17 +214,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await AuthService.register(data);
 
       if (response.status === 'success' && response.data) {
-        const { token, user: userData, refreshToken } = response.data;
+        const { accessToken, user: userData, refreshToken } = response.data;
 
         console.log('✅ Registration API successful, saving auth data...');
 
         // ✅ CRITICAL: Await to ensure data is saved before proceeding
-        await AuthService.saveAuthData(token, userData, refreshToken);
+        await AuthService.saveAuthData(accessToken, userData, refreshToken);
 
         // ✅ Verify data was actually saved
         const savedToken = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         const savedUser = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-        
+
         console.log('🔍 Verification - Token saved:', !!savedToken);
         console.log('🔍 Verification - User saved:', !!savedUser);
 
@@ -289,52 +262,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const completeProfileSetup = async (
+    data: anny
+  ): Promise<AuthResult> => {
+    if (!user?.id) {
+      console.error('❌ No user logged in');
+      return { success: false, error: 'No user logged in' };
+    }
 
-  const completeProfileSetup = async (data: ProfileSetupData): Promise<AuthResult> => {
+    console.log('📤 Completing profile registration for user:', user.id);
+
     try {
-      if (!user?.id) {
-        console.error('❌ No user logged in');
-        return {
-          success: false,
-          error: 'No user logged in'
-        };
-      }
-
-      console.log('📤 Completing profile setup for user:', user.id);
-
       const response = await AuthService.completeProfileSetup(user.id, data);
 
-      if (response.status === 'success' && response.data?.user) {
-        console.log('✅ Profile setup completed successfully');
+      console.log('📦 Complete profile response:', response);
 
-        // Update user in state
-        const updatedUser = response.data.user;
-        setUser(updatedUser);
+      if (response.status === 'success') {
+        console.log('✅ Profile registration completed');
 
-        // Update storage
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.USER_DATA,
-          JSON.stringify(updatedUser)
-        );
+        // ✅ Update langsung dari response
+        if (response.data) {
+          console.log('📦 User data from response:', response.data);
 
-        return { success: true };
+          // ✅ Set user langsung
+          setUser(response.data);
+
+          // ✅ Save to AsyncStorage
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.USER_DATA,
+            JSON.stringify(response.data)
+          );
+
+          console.log('✅ User state updated:', {
+            isVerified: response.data.isVerified,
+            onboardingCompleted: response.data.onboardingCompleted,
+          });
+
+          return { success: true };
+        } else {
+          console.error('❌ No data in response');
+          return { success: false, error: 'No user data returned' };
+        }
       } else {
-        console.error('❌ Profile setup failed:', response.message);
-        return {
-          success: false,
-          error: response.message || 'Profile setup failed'
-        };
+        console.error('❌ Profile registration failed:', response.message);
+        return { success: false, error: response.message || 'Profile registration failed' };
       }
     } catch (error) {
-      console.error('❌ Profile setup error:', error);
+      console.error('❌ Profile registration error:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Profile setup failed due to an error'
+        error: error instanceof Error ? error.message : 'Unexpected error'
       };
     }
   };
-
-
   const updateProfile = async (
     data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>
   ): Promise<AuthResult> => {
@@ -374,47 +354,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-
-  const profileRegistration = async (
-    data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>
-  ): Promise<AuthResult> => {
-    try {
-      if (!user?.id) {
-        console.error('❌ No user logged in');
-        return {
-          success: false,
-          error: 'No user logged in'
-        };
-      }
-
-      console.log('📤 Profile registration for user:', user.id);
-
-      const response = await AuthService.completeProfileSetup(user.id, data);
-
-      if (response.status === 'success') {
-        console.log('✅ Profile registration completed');
-
-        // Refresh user profile
-        await refreshUserProfile();
-
-        return { success: true };
-      } else {
-        console.error('❌ Profile registration failed:', response.message);
-        return {
-          success: false,
-          error: response.message || 'Profile registration failed'
-        };
-      }
-    } catch (error) {
-      console.error('❌ Profile registration error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Profile registration failed due to an error'
-      };
-    }
-  };
-
-
   const refreshUserProfile = async () => {
     try {
       if (!user?.id) {
@@ -427,29 +366,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const freshUserData = await AuthService.getUserProfile(user.id);
 
       if (freshUserData) {
-        const updatedUser = {
-          ...user,
-          ...freshUserData,
-        };
+        console.log('📦 Fresh data from server:', freshUserData);
 
-        setUser(updatedUser);
+        // ✅ Replace completely - trust backend as source of truth
+        setUser(freshUserData);
 
         // ✅ Persist to AsyncStorage
         await AsyncStorage.setItem(
           STORAGE_KEYS.USER_DATA,
-          JSON.stringify(updatedUser)
+          JSON.stringify(freshUserData)
         );
 
         console.log('✅ Profile refreshed and saved successfully');
+
+        return freshUserData;
       } else {
         console.warn('⚠️ Failed to refresh profile: no data returned from server');
+        return null;
       }
     } catch (error) {
       console.error('❌ Error refreshing profile:', error);
-      // Don't throw - let the app continue with cached data
+      return null;
     }
   };
-
 
   const changePassword = async (
     oldPassword: string,
@@ -478,7 +417,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
   };
-
 
   const checkUsernameAvailability = async (
     username: string
@@ -522,7 +460,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-
   const logout = async () => {
     try {
       console.log('📤 Logging out user...');
@@ -542,7 +479,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // This ensures user is logged out locally
       setIsLoggedIn(false);
       setUser(null);
-      
+
       console.log('⚠️ Logged out locally despite error');
     }
   };
@@ -552,12 +489,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     isLoggedIn,
     user,
+    setUser,
     login,
     register,
     logout,
     refreshUserProfile,
     updateProfile,
-    profileRegistration,
     completeProfileSetup,
     changePassword,
     checkUsernameAvailability,

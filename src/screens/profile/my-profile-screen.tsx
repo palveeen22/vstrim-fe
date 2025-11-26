@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   SafeAreaView,
   StatusBar,
   ScrollView,
@@ -18,6 +17,7 @@ type ProfileField = {
   icon: string;
   label: string;
   value: string;
+  iconColor?: string;
 };
 
 const ProfileDetailScreen = ({ navigation }: any) => {
@@ -42,6 +42,56 @@ const ProfileDetailScreen = ({ navigation }: any) => {
     });
   };
 
+  // Format date of birth
+  const formatDateOfBirth = (dateString?: string) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric' 
+    });
+  };
+
+  // Get location from coordinates
+  const getLocation = () => {
+    if (user?.coordinates?.city) {
+      return user.coordinates.city;
+    }
+    return user?.location || '-';
+  };
+
+  // Format interests
+  const formatInterests = () => {
+    if (!user?.interests || user.interests.length === 0) return '-';
+    return user.interests.join(', ');
+  };
+
+  // Format vibes
+  const formatVibes = () => {
+    if (!user?.vibes || user.vibes.length === 0) return '-';
+    return user.vibes.map((vibe: string) => 
+      vibe.charAt(0).toUpperCase() + vibe.slice(1)
+    ).join(', ');
+  };
+
+  // Format join reasons
+  const formatJoinReasons = () => {
+    if (!user?.joinReasons || user.joinReasons.length === 0) return '-';
+    return user.joinReasons
+      .map((reason: string) => 
+        reason.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ')
+      )
+      .join(', ');
+  };
+
+  // Get communities count
+  const getCommunitiesCount = () => {
+    return user?.communities?.length || 0;
+  };
+
   // Profile fields configuration
   const profileFields: ProfileField[] = [
     {
@@ -57,10 +107,45 @@ const ProfileDetailScreen = ({ navigation }: any) => {
       value: user?.email || '-',
     },
     {
+      id: 'dateOfBirth',
+      icon: 'calendar-outline',
+      label: 'Date of Birth',
+      value: formatDateOfBirth(user?.dateOfBirth),
+    },
+    {
       id: 'location',
       icon: 'location-outline',
       label: 'Location',
-      value: user?.location || '-',
+      value: getLocation(),
+    },
+    {
+      id: 'verified',
+      icon: user?.isVerified ? 'checkmark-circle' : 'close-circle-outline',
+      label: 'Account Status',
+      value: user?.isVerified ? 'Verified ✓' : 'Not Verified',
+      iconColor: user?.isVerified ? '#10B981' : '#6B7280',
+    },
+  ];
+
+  // Additional info fields
+  const additionalFields: ProfileField[] = [
+    {
+      id: 'interests',
+      icon: 'heart-outline',
+      label: 'Interests',
+      value: formatInterests(),
+    },
+    {
+      id: 'vibes',
+      icon: 'flash-outline',
+      label: 'Vibes',
+      value: formatVibes(),
+    },
+    {
+      id: 'joinReasons',
+      icon: 'bulb-outline',
+      label: 'Join Reason',
+      value: formatJoinReasons(),
     },
   ];
 
@@ -97,6 +182,11 @@ const ProfileDetailScreen = ({ navigation }: any) => {
                 </Text>
               </View>
             )}
+            {user?.isVerified && (
+              <View style={styles.verifiedBadge}>
+                <Icon name="checkmark-circle" size={24} color="#10B981" />
+              </View>
+            )}
           </View>
 
           {/* Name & Bio */}
@@ -105,6 +195,10 @@ const ProfileDetailScreen = ({ navigation }: any) => {
 
           {user?.bio && (
             <Text style={styles.profileBio}>{user.bio}</Text>
+          )}
+
+          {user?.tokens && (
+            <Text style={styles.profileBio}>{`💰 ${user.tokens}`}</Text>
           )}
 
           {/* Join Date Badge */}
@@ -134,18 +228,32 @@ const ProfileDetailScreen = ({ navigation }: any) => {
 
           {/* Match Indicators */}
           <View style={styles.matchIndicators}>
-            <View style={styles.matchIndicator}>
-              <View style={[styles.indicatorDot, { backgroundColor: '#10B981' }]} />
-              <Text style={styles.indicatorText}>Similar Interests</Text>
-            </View>
-            <View style={styles.matchIndicator}>
-              <View style={[styles.indicatorDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.indicatorText}>Same Location</Text>
-            </View>
-            <View style={styles.matchIndicator}>
-              <View style={[styles.indicatorDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.indicatorText}>Active Member</Text>
-            </View>
+            {user?.interests && user.interests.length > 0 && (
+              <View style={styles.matchIndicator}>
+                <View style={[styles.indicatorDot, { backgroundColor: '#10B981' }]} />
+                <Text style={styles.indicatorText}>
+                  {user.interests.length} Interest{user.interests.length > 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
+            {user?.coordinates?.city && (
+              <View style={styles.matchIndicator}>
+                <View style={[styles.indicatorDot, { backgroundColor: '#3B82F6' }]} />
+                <Text style={styles.indicatorText}>{user.coordinates.city}</Text>
+              </View>
+            )}
+            {user?.isVerified && (
+              <View style={styles.matchIndicator}>
+                <View style={[styles.indicatorDot, { backgroundColor: '#10B981' }]} />
+                <Text style={styles.indicatorText}>Verified Member</Text>
+              </View>
+            )}
+            {user?.onboardingCompleted && (
+              <View style={styles.matchIndicator}>
+                <View style={[styles.indicatorDot, { backgroundColor: '#F59E0B' }]} />
+                <Text style={styles.indicatorText}>Profile Complete</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -161,6 +269,37 @@ const ProfileDetailScreen = ({ navigation }: any) => {
               style={[
                 styles.infoItem,
                 index === profileFields.length - 1 && styles.infoItemLast,
+              ]}
+            >
+              <View style={styles.infoLeft}>
+                <View style={styles.iconContainer}>
+                  <Icon 
+                    name={field.icon} 
+                    size={20} 
+                    color={field.iconColor || '#6B7280'} 
+                  />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoLabel}>{field.label}</Text>
+                  <Text style={styles.infoValue}>{field.value}</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Interests & Preferences Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Interests & Preferences</Text>
+        </View>
+
+        <View style={styles.infoSection}>
+          {additionalFields.map((field, index) => (
+            <View
+              key={field.id}
+              style={[
+                styles.infoItem,
+                index === additionalFields.length - 1 && styles.infoItemLast,
               ]}
             >
               <View style={styles.infoLeft}>
@@ -186,7 +325,7 @@ const ProfileDetailScreen = ({ navigation }: any) => {
             <View style={styles.statIconContainer}>
               <Icon name="people" size={24} color="#FF6B35" />
             </View>
-            <Text style={styles.statNumber}>3</Text>
+            <Text style={styles.statNumber}>{getCommunitiesCount()}</Text>
             <Text style={styles.statLabel}>Communities</Text>
           </View>
 
@@ -194,10 +333,12 @@ const ProfileDetailScreen = ({ navigation }: any) => {
 
           <View style={styles.statItem}>
             <View style={styles.statIconContainer}>
-              <Icon name="heart" size={24} color="#FF6B35" />
+              <Icon name="gift" size={24} color="#FF6B35" />
             </View>
-            <Text style={styles.statNumber}>24</Text>
-            <Text style={styles.statLabel}>Contributions</Text>
+            <Text style={styles.statNumber}>
+              {user?.dailyQuizzes?.length || 0}
+            </Text>
+            <Text style={styles.statLabel}>Daily Quizzes</Text>
           </View>
 
           <View style={styles.statDivider} />
@@ -206,8 +347,8 @@ const ProfileDetailScreen = ({ navigation }: any) => {
             <View style={styles.statIconContainer}>
               <Icon name="star" size={24} color="#FF6B35" />
             </View>
-            <Text style={styles.statNumber}>156</Text>
-            <Text style={styles.statLabel}>Points</Text>
+            <Text style={styles.statNumber}>{user?.tokens || 0}</Text>
+            <Text style={styles.statLabel}>Tokens</Text>
           </View>
         </View>
 
@@ -217,47 +358,47 @@ const ProfileDetailScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.badgesContainer}>
-          <View style={styles.badge}>
-            <View style={[styles.badgeIcon, { backgroundColor: '#FEF3C7' }]}>
-              <Icon name="trophy" size={24} color="#F59E0B" />
+          {user?.onboardingCompleted && (
+            <View style={styles.badge}>
+              <View style={[styles.badgeIcon, { backgroundColor: '#FEF3C7' }]}>
+                <Icon name="trophy" size={24} color="#F59E0B" />
+              </View>
+              <Text style={styles.badgeLabel}>Onboarding Complete</Text>
             </View>
-            <Text style={styles.badgeLabel}>Early Adopter</Text>
-          </View>
+          )}
 
-          <View style={styles.badge}>
-            <View style={[styles.badgeIcon, { backgroundColor: '#DBEAFE' }]}>
-              <Icon name="chatbubbles" size={24} color="#3B82F6" />
+          {user?.isVerified && (
+            <View style={styles.badge}>
+              <View style={[styles.badgeIcon, { backgroundColor: '#D1FAE5' }]}>
+                <Icon name="checkmark-circle" size={24} color="#10B981" />
+              </View>
+              <Text style={styles.badgeLabel}>Verified User</Text>
             </View>
-            <Text style={styles.badgeLabel}>Active Speaker</Text>
-          </View>
+          )}
 
-          <View style={styles.badge}>
-            <View style={[styles.badgeIcon, { backgroundColor: '#D1FAE5' }]}>
-              <Icon name="leaf" size={24} color="#10B981" />
+          {getCommunitiesCount() > 0 && (
+            <View style={styles.badge}>
+              <View style={[styles.badgeIcon, { backgroundColor: '#DBEAFE' }]}>
+                <Icon name="people" size={24} color="#3B82F6" />
+              </View>
+              <Text style={styles.badgeLabel}>Community Member</Text>
             </View>
-            <Text style={styles.badgeLabel}>Eco Warrior</Text>
-          </View>
+          )}
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={styles.primaryButton}
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <Icon name="settings-outline" size={20} color="#fff" />
-            <Text style={styles.primaryButtonText}>Settings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.secondaryButton}
-            onPress={() => navigation.navigate('Support')}
-          >
-            <Icon name="help-circle-outline" size={20} color="#FF6B35" />
-            <Text style={styles.secondaryButtonText}>Help</Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Hangout Places (if any) */}
+        {user?.hangoutPlaces && user.hangoutPlaces.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Hangout Places</Text>
+            </View>
+            <View style={styles.infoSection}>
+              <Text style={styles.emptyText}>
+                {user.hangoutPlaces.length} place(s) saved
+              </Text>
+            </View>
+          </>
+        )}
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
@@ -312,6 +453,14 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 2,
   },
   profileName: {
     fontSize: 24,
@@ -540,43 +689,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
-  actionButtons: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 24,
-    gap: 12,
-  },
-  primaryButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF6B35',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  secondaryButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#FF6B35',
-    gap: 8,
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FF6B35',
+  emptyText: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    paddingVertical: 16,
   },
   bottomSpacing: {
     height: 40,

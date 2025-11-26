@@ -1,6 +1,7 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants';
+import { AuthService } from './auth-service';
 
 const API_URL = process.env.BASE_URL_API || 'http://localhost:3002/api';
 
@@ -47,62 +48,87 @@ export interface SubmitQuizPayload {
   }[];
 }
 
-
 export interface SubmitQuizResponse {
   status: 'success' | 'error';
   message?: string;
   data?: {
-    // score: number;
-    // totalQuestions: number;
-    // matches?: any[];
-    // isCompleted? : boolean;
     isCompleted: boolean;
     dailyQuizId: string;
     totalQuestions: number;
     answeredQuestions: number;
     completedAt: Date;
     message: string;
+    user: any
   };
 }
 
-// Axios instance with interceptor
+interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+// Axios instance
 const apiClient = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor to add Bearer token
+// ✅ Request interceptor to attach access token
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      // ✅ Gunakan konstanta TOKEN_KEY yang sama
       const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-
       if (token) {
-        // Add Bearer token to Authorization header
+        config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('✅ Token added to request:', token.substring(0, 20) + '...'); // Log sebagian token untuk debugging
-      } else {
-        console.warn('⚠️ No token found in storage');
       }
-
       return config;
     } catch (error) {
-      console.error('❌ Error reading token from storage:', error);
+      console.error('❌ Failed to read token from storage', error);
       return config;
     }
   },
-  (error) => {
+  (error) => Promise.reject(error)
+);
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError & { config?: AxiosRequestConfigWithRetry }) => {
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
+      console.warn('⚠️ 401 Unauthorized, attempting token refresh...');
+      originalRequest._retry = true;
+
+      const refreshResponse = await AuthService.refreshToken();
+
+      const newToken = refreshResponse.data?.accessToken;
+      if (refreshResponse.status === 'success' && newToken) {
+        // Update AsyncStorage
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newToken);
+
+        // Update header dan ulangi request
+        if (error.config) {
+          error.config.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(error.config);
+        }
+      }
+
+
+      // Jika refresh gagal → logout user
+      await AuthService.clearAuthData();
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   }
 );
 
+
 export class QuizService {
-  /**
-   * Fetch daily quiz questions
-   */
   static async fetchDailyQuiz(): Promise<ApiResponse> {
     try {
       const response = await apiClient.get<ApiResponse>('/daily-quiz');
@@ -113,9 +139,9 @@ export class QuizService {
     }
   }
 
-   static async checkTodayCompletion(): Promise<QuizCompletionStatus> {
+  static async checkTodayCompletion(): Promise<QuizCompletionStatus> {
     try {
-      const response = await apiClient.get('/daily-quiz/completion');
+      const response = await apiClient.get<QuizCompletionStatus>('/daily-quiz/completion');
       return response.data;
     } catch (error) {
       console.error('Check completion error:', error);
@@ -123,24 +149,15 @@ export class QuizService {
     }
   }
 
-  /**
-   * Submit quiz answers
-   */
   static async submitQuiz(payload: SubmitQuizPayload): Promise<SubmitQuizResponse> {
     try {
-      const response = await apiClient.post<SubmitQuizResponse>(
-        '/daily-quiz/submit',
-        payload
-      );
+      const response = await apiClient.post<SubmitQuizResponse>('/daily-quiz/submit', payload);
       return response.data;
     } catch (error) {
       return QuizService.handleError(error) as SubmitQuizResponse;
     }
   }
 
-  /**
-   * Force refresh daily quiz (admin only)
-   */
   static async forceRefreshQuiz(): Promise<ApiResponse> {
     try {
       const response = await apiClient.post<ApiResponse>('/daily-quiz/refresh-quiz');
@@ -150,98 +167,32 @@ export class QuizService {
     }
   }
 
-  /**
-   * Handle API errors consistently
-   */
   private static handleError(error: unknown): ApiResponse {
     if (axios.isAxiosError(error)) {
       const axiosError = error as any;
 
-      // Network error
+      // Network / Timeout
       if (axiosError.message === 'Network Error') {
-        return {
-          status: 'error',
-          message: 'Network error. Please check your connection.',
-        };
+        return { status: 'error', message: 'Network error. Check your connection.' };
       }
-
-      // Timeout error
       if (axiosError.code === 'ECONNABORTED') {
-        return {
-          status: 'error',
-          message: 'Request timeout. Please try again.',
-        };
+        return { status: 'error', message: 'Request timeout. Please try again.' };
       }
 
-      // Server responded with error
+      // Server response
       if (axiosError.response?.data) {
-        const errorMessage = axiosError.response.data.message || 'An error occurred';
-
-        // Handle specific status codes
+        const message = axiosError.response.data.message || 'An error occurred';
         switch (axiosError.response.status) {
-          case 401:
-            return {
-              status: 'error',
-              message: 'Authentication required. Please login again.',
-            };
-          case 403:
-            return {
-              status: 'error',
-              message: 'Access denied. You do not have permission.',
-            };
-          case 404:
-            return {
-              status: 'error',
-              message: 'Quiz not found. Please try again later.',
-            };
-          case 429:
-            return {
-              status: 'error',
-              message: 'Too many requests. Please wait a moment.',
-            };
-          case 500:
-            return {
-              status: 'error',
-              message: 'Server error. Please try again later.',
-            };
-          default:
-            return {
-              status: 'error',
-              message: errorMessage,
-            };
+          case 401: return { status: 'error', message: 'Authentication required. Login again.' };
+          case 403: return { status: 'error', message: 'Access denied.' };
+          case 404: return { status: 'error', message: 'Quiz not found.' };
+          case 429: return { status: 'error', message: 'Too many requests. Try later.' };
+          case 500: return { status: 'error', message: 'Server error. Try again later.' };
+          default: return { status: 'error', message };
         }
       }
     }
 
-    return {
-      status: 'error',
-      message: 'An unexpected error occurred',
-    };
-  }
-
-  /**
-   * Set authentication token manually (useful for testing)
-   */
-  static async setAuthToken(token: string): Promise<void> {
-    // ✅ Gunakan konstanta TOKEN_KEY yang sama
-    await AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
-    console.log('💾 Token saved successfully');
-  }
-
-  /**
-   * Clear authentication token
-   */
-  static async clearAuthToken(): Promise<void> {
-    // ✅ Gunakan konstanta TOKEN_KEY yang sama
-    await AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-    console.log('🗑️ Token cleared successfully');
-  }
-
-  /**
-   * Get current authentication token
-   */
-  static async getAuthToken(): Promise<string | null> {
-    // ✅ Gunakan konstanta TOKEN_KEY yang sama
-    return await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    return { status: 'error', message: 'Unexpected error occurred.' };
   }
 }

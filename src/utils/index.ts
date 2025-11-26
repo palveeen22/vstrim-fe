@@ -54,9 +54,14 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // eslint-disable-next-line no-useless-escape
 const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,3}[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}$/;
 
+// Helper function to get per-user key
+const getQuizCompletionKey = (userId: string) => `@quiz_completion_${userId}`;
+
+
 export {
   formatDate,
   formatPrice,
   emailRegex,
   phoneRegex,
+  getQuizCompletionKey
 };
