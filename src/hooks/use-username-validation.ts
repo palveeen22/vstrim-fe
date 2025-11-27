@@ -1,6 +1,6 @@
 // hooks/useUsernameValidation.ts
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../contexts/auth-context';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UsernameValidationState {
   username: string;

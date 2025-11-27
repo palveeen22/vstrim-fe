@@ -1,0 +1,1 @@
+export { DailsQuizScreen } from "./quiz-screen";

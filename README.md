@@ -96,3 +96,38 @@ To learn more about React Native, take a look at the following resources:
 - [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
 - [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
 # vstrim-fe
+
+
+```
+src/
+  app/                   # App-level globals
+    navigation/
+    store/
+    config/
+    utils/
+    theme/
+  features/
+    auth/
+      components/
+      screens/
+      hooks/
+      services/
+      types/
+      auth.slice.ts
+      index.ts
+    explore/
+      components/
+      screens/
+      hooks/
+      services/
+      index.ts
+    profile/
+      ...
+  shared/
+    components/          # Truly reusable components
+    hooks/
+    services/
+    ui/                  # Buttons, inputs — the atoms
+  assets/
+  typings/
+```
