@@ -24,7 +24,7 @@ export const WelcomeScreen = ({ navigation }: TProps) => {
       {/* Lottie Animation - Full Screen */}
       <View style={styles.lottieContainer}>
         <LottieView
-          source={require('../assets/animations/welcome-animation.json')}
+          source={require('../../../assets/animations/welcome-animation.json')}
           autoPlay
           loop
           style={styles.lottieAnimation}

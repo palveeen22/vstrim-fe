@@ -32,25 +32,25 @@ const onboardingData: OnboardingItem[] = [
     id: '1',
     title: 'Welcome to Vstrim',
     description: 'Discover your city’s vibe — join communities, explore events, and connect with people who share your passions.',
-    image: require('../assets/images/on-boarding.jpg'),
+    image: require('../../../assets/images/on-boarding.jpg'),
   },
   {
     id: '2',
     title: 'Find Events & Communities',
     description: 'From sports and language meetups to nightlife hangouts — explore what’s happening around you and never miss the moment.',
-    image: require('../assets/images/on-boarding2.jpg'),
+    image: require('../../../assets/images/on-boarding2.jpg'),
   },
   {
     id: '3',
     title: 'Meet. Match. Connect.',
     description: 'Find new friends or teammates through shared interests, event participation, or spontaneous local matches.',
-    image: require('../assets/images/on-boarding3.jpg'),
+    image: require('../../../assets/images/on-boarding3.jpg'),
   },
   {
     id: '4',
     title: 'Enjoy Local Perks',
     description: 'Earn promo coupons, get exclusive deals, and stay updated with real-time events from your favorite spots.',
-    image: require('../assets/images/on-boarding.jpg'),
+    image: require('../../../assets/images/on-boarding.jpg'),
   },
 ];
 

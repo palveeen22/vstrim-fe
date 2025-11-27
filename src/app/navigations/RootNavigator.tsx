@@ -3,8 +3,8 @@ import { Image, StyleSheet, View } from "react-native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNetwork } from "../hooks/use-networks";
-import { AuthNavigation, OnboardingScreen } from "@/features/auth";
-import { NetworkError } from "@/shared/components";
+import { AuthNavigation, OnboardingScreen } from "../../features/auth";
+import { NetworkError } from "../../shared/components";
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -16,7 +16,7 @@ export type RootStackParamList = {
 
 const AppStack = createStackNavigator<RootStackParamList>();
 
-const AppNavigation = () => {
+export const RootNavigator = () => {
   let isLoggedIn
   const { isConnected, isInternetReachable, checkConnection } = useNetwork();
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -57,7 +57,7 @@ const AppNavigation = () => {
     return (
       <View style={styles.splashContainer}>
         <Image
-          source={require('../assets/splashscreen.png')}
+          source={require('../../assets/images/splashscreen.png')}
           style={styles.splashImage}
           resizeMode="cover"
         />
@@ -124,6 +124,3 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 });
-
-
-export default AppNavigation;

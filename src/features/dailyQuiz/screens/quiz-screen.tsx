@@ -1,4 +1,4 @@
-import { useQuiz } from '@/contexts/DailyQuizContext';
+import { useQuiz } from '../../../contexts/DailyQuizContext';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,

@@ -1,8 +1,8 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import AppNavigation from './src/navigations/app-navigation';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { QuizProvider } from './src/contexts/DailyQuizContext';
+import { RootNavigator } from "./src/app/navigations/RootNavigator"
 
 const App = (): React.ReactElement => {
 
@@ -11,7 +11,7 @@ const App = (): React.ReactElement => {
       <NavigationContainer>
         <AuthProvider>
           <QuizProvider>
-            <AppNavigation />
+            <RootNavigator />
           </QuizProvider>
         </AuthProvider>
       </NavigationContainer>

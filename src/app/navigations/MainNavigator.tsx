@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons'
-import { useAuth } from '@/contexts/AuthContext';
-import { DailsQuizScreen } from '@/features/dailyQuiz';
-import MatchScreen from '@/screens/match-screen';
-import { MapExploreScreen } from '@/features/explore';
-import { InBoxScreen } from '@/features/message';
-import { ProfileNavigator } from '@/features/profile';
+import { useAuth } from '../../contexts/AuthContext';
+import { DailsQuizScreen } from '../../features/dailyQuiz';
+import MatchScreen from '../../screens/match-screen';
+import { MapExploreScreen } from '../../features/explore';
+import { InBoxScreen } from '../../features/message';
+import { ProfileNavigator } from '../../features/profile';
 
 
 // Type definitions for the bottom tab navigator

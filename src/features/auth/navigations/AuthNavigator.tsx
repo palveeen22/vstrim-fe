@@ -1,10 +1,7 @@
+import { useAuth } from '../../../contexts/AuthContext';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AuthScreen from '../screens/auth-screen';
-import LoginScreen from '../screens/login-screen';
-import RegisterScreen from '../screens/register-screen';
-import BottomTabNavigation from '../../../app/navigations/MainNavigator';
-import { useAuth } from '../contexts/auth-context';
-import ProfileVerificationScreen from '../screens/VerificationScreen';
+import { AuthScreen, LoginScreen, RegisterScreen, VerificationScreen } from '../screens';
+import { MainNavigator } from '../../../app/navigations/MainNavigator';
 
 export type AuthStackParamList = {
   Welcome: undefined;
@@ -42,11 +39,11 @@ export const AuthNavigation = () => {
         </>
       ) : needsToVerify ? (
         <>
-          <AuthStack.Screen name='Verify' component={ProfileVerificationScreen} />
+          <AuthStack.Screen name='Verify' component={VerificationScreen} />
 
         </>
       ) : (
-        <AuthStack.Screen name='Main' component={BottomTabNavigation} />
+        <AuthStack.Screen name='Main' component={MainNavigator} />
       )}
     </AuthStack.Navigator>
   );

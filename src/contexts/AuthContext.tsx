@@ -5,7 +5,7 @@ import {
   LoginCredentials,
   RegisterData,
   UserProfile
-} from '@/features/auth';
+} from '../features/auth';
 import { STORAGE_KEYS } from '../constants';
 
 type AuthResult = {

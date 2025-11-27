@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AxiosError } from 'axios';
 import { LoginCredentials, RegisterData, UserProfile } from '../types/auth.types';
-import apiClient from '@/app/config/apiClient';
-import { STORAGE_KEYS } from '@/constants';
+import apiClient from '../../../app/config/apiClient';
+import { STORAGE_KEYS } from '../../../constants';
 
 
 

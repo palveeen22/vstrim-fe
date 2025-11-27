@@ -18,7 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '../../../contexts/AuthContext';
 import { AuthStackParamList } from '../navigations/AuthNavigator';
-import { HeaderBack } from '@/shared/components';
+import { HeaderBack } from '../../../shared/components';
 
 type TProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -286,7 +286,7 @@ export const LoginScreen = ({ navigation }: TProps) => {
                   <ActivityIndicator size="small" color="#4285F4" />
                 ) : (
                   <Image
-                    source={require('../assets/images/google-logo.png')}
+                    source={require('../../../assets/images/google-logo.png')}
                     style={styles.oauthIcon}
                     resizeMode="contain"
                   />

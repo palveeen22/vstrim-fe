@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../../contexts/AuthContext';
-import { HeaderBack } from '@/shared/components';
+import { HeaderBack } from '../../../shared/components';
 
 type MenuItem = {
   id: string;

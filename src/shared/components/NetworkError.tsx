@@ -49,7 +49,7 @@ export const NetworkError = ({
 
       <View style={styles.content}>
         <Image
-          source={require('../assets/images/no-conection.png')}
+          source={require('../../assets/images/no-conection.png')}
           style={styles.image}
           resizeMode="contain"
         />

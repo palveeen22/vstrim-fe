@@ -76,7 +76,7 @@ export const AuthScreen = ({ navigation }: TProps) => {
         {/* Logo/Illustration */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/images/vstrim.png')}
+            source={require('../../../assets/images/vstrim.png')}
             style={styles.loginIcon}
             resizeMode="contain"
           />
@@ -134,7 +134,7 @@ export const AuthScreen = ({ navigation }: TProps) => {
               ) : (
                 <>
                   <Image
-                    source={require('../assets/images/google-logo.png')}
+                    source={require('../../../assets/images/google-logo.png')}
                     style={styles.oauthIcon}
                     resizeMode="contain"
                   />
@@ -158,7 +158,7 @@ export const AuthScreen = ({ navigation }: TProps) => {
                 ) : (
                   <>
                     <Image
-                      source={require('../assets/images/apple-logo.png')}
+                      source={require('../../../assets/images/apple-logo.png')}
                       style={styles.oauthIcon}
                       resizeMode="contain"
                     />

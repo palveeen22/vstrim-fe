@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../constants';
-import { AuthService } from '@/features/auth';
+import { AuthService } from '../../features/auth';
 
 const API_URL = process.env.BASE_URL_API || 'http://localhost:3002/api';
 
