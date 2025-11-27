@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,8 +11,35 @@
 		48EB06EA253E36726AC8E30C /* libPods-vstrim.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 384FC603AA8E347D0D30CA69 /* libPods-vstrim.a */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		81AFC88C2ED88BA6002DDD39 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81AFC88B2ED88BA6002DDD39 /* WidgetKit.framework */; };
+		81AFC88E2ED88BA6002DDD39 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81AFC88D2ED88BA6002DDD39 /* SwiftUI.framework */; };
+		81AFC89F2ED88BA7002DDD39 /* VstrimWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E8E20C6597C07F6CCB2C842B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		81AFC89D2ED88BA7002DDD39 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 81AFC8892ED88BA6002DDD39;
+			remoteInfo = VstrimWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		81AFC8A02ED88BA7002DDD39 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				81AFC89F2ED88BA7002DDD39 /* VstrimWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* vstrim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = vstrim.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -23,9 +50,26 @@
 		5C7F68DB7C0384014A15CDBB /* Pods-vstrim.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-vstrim.release.xcconfig"; path = "Target Support Files/Pods-vstrim/Pods-vstrim.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = vstrim/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = vstrim/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VstrimWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		81AFC88B2ED88BA6002DDD39 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		81AFC88D2ED88BA6002DDD39 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		92B4DEA51667B74D436B3954 /* Pods-vstrim.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-vstrim.debug.xcconfig"; path = "Target Support Files/Pods-vstrim/Pods-vstrim.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		81AFC8A32ED88BA7002DDD39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 81AFC8892ED88BA6002DDD39 /* VstrimWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		81AFC88F2ED88BA6002DDD39 /* VstrimWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (81AFC8A32ED88BA7002DDD39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = VstrimWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
@@ -33,6 +77,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				48EB06EA253E36726AC8E30C /* libPods-vstrim.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81AFC8872ED88BA6002DDD39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				81AFC88E2ED88BA6002DDD39 /* SwiftUI.framework in Frameworks */,
+				81AFC88C2ED88BA6002DDD39 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,6 +109,8 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				384FC603AA8E347D0D30CA69 /* libPods-vstrim.a */,
+				81AFC88B2ED88BA6002DDD39 /* WidgetKit.framework */,
+				81AFC88D2ED88BA6002DDD39 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -72,6 +127,7 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* vstrim */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				81AFC88F2ED88BA6002DDD39 /* VstrimWidget */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
@@ -85,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* vstrim.app */,
+				81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,15 +169,39 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				B701377330CDCEFD716B7687 /* [CP] Embed Pods Frameworks */,
 				EA9E6AE808D26F1FB81DC245 /* [CP] Copy Pods Resources */,
+				81AFC8A02ED88BA7002DDD39 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				81AFC89E2ED88BA7002DDD39 /* PBXTargetDependency */,
 			);
 			name = vstrim;
 			productName = vstrim;
 			productReference = 13B07F961A680F5B00A75B9A /* vstrim.app */;
 			productType = "com.apple.product-type.application";
+		};
+		81AFC8892ED88BA6002DDD39 /* VstrimWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 81AFC8A42ED88BA7002DDD39 /* Build configuration list for PBXNativeTarget "VstrimWidgetExtension" */;
+			buildPhases = (
+				81AFC8862ED88BA6002DDD39 /* Sources */,
+				81AFC8872ED88BA6002DDD39 /* Frameworks */,
+				81AFC8882ED88BA6002DDD39 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				81AFC88F2ED88BA6002DDD39 /* VstrimWidget */,
+			);
+			name = VstrimWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = VstrimWidgetExtension;
+			productReference = 81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -128,10 +209,14 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1120;
+					};
+					81AFC8892ED88BA6002DDD39 = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
@@ -149,6 +234,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* vstrim */,
+				81AFC8892ED88BA6002DDD39 /* VstrimWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -161,6 +247,13 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				E8E20C6597C07F6CCB2C842B /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		81AFC8882ED88BA6002DDD39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,7 +343,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		81AFC8862ED88BA6002DDD39 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		81AFC89E2ED88BA7002DDD39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 81AFC8892ED88BA6002DDD39 /* VstrimWidgetExtension */;
+			targetProxy = 81AFC89D2ED88BA7002DDD39 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -304,6 +412,89 @@
 				PRODUCT_NAME = vstrim;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		81AFC8A12ED88BA7002DDD39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VstrimWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VstrimWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.vstrim.VstrimWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		81AFC8A22ED88BA7002DDD39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VstrimWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = VstrimWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.vstrim.VstrimWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -459,6 +650,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		81AFC8A42ED88BA7002DDD39 /* Build configuration list for PBXNativeTarget "VstrimWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				81AFC8A12ED88BA7002DDD39 /* Debug */,
+				81AFC8A22ED88BA7002DDD39 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
