@@ -31,7 +31,7 @@ interface QuizContextValue extends QuizState {
   nextQuestion: () => void;
   previousQuestion: () => void;
   resetQuiz: () => void;
-  submitQuiz: () => Promise<void>;
+  submitQuiz: () => Promise<boolean>;
   getCurrentQuestion: () => QuizQuestion | null;
   getProgress: () => number;
 }
@@ -58,7 +58,7 @@ interface QuizProviderProps {
 
 // Provider Component
 export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
-  const { user: whoLogin, setUser } = useAuth()
+  const { user: whoLogin } = useAuth()
   const [state, setState] = useState<QuizState>(initialState);
 
   // ✅ Load completion data saat app start
@@ -211,7 +211,8 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
   }, []);
 
 
-  const submitQuiz = useCallback(async () => {
+  // Di DailyQuizContext - submitQuiz function
+  const submitQuiz = useCallback(async (): Promise<boolean> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -220,20 +221,13 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
       );
 
       const payload: SubmitQuizPayload = { answers: answersArray };
-
-      console.log('Submitting quiz answers:', payload);
-
       const response = await QuizService.submitQuiz(payload);
-
-      console.log('Submit response:', response);
 
       if (response?.status === 'success' && response.data) {
         const {
           isCompleted,
           dailyQuizId,
           completedAt,
-          totalQuestions,
-          answeredQuestions,
           user: updatedUser,
         } = response.data;
 
@@ -255,33 +249,28 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
           error: null,
         }));
 
-        // 🔄 Update profile global (AuthContext)
+        // ❌ JANGAN update user di sini!
+        // ✅ Return user data untuk di-update nanti
+        // Store updated user temporarily
         if (updatedUser) {
-          setUser(prevUser => ({
-            ...prevUser,
-            ...updatedUser,
-          }));
-
+          // Save ke AsyncStorage dulu
           await AsyncStorage.setItem(
             STORAGE_KEYS.USER_DATA,
             JSON.stringify(updatedUser)
           );
-
-          console.log('✅ User profile updated after quiz submit');
         }
 
-        console.log('✅ Quiz completed and saved:', {
-          dailyQuizId,
-          answeredQuestions,
-          totalQuestions,
-          completedAt,
-        });
+        console.log('✅ Quiz completed and saved');
+
+        return true;
       } else {
         setState(prev => ({
           ...prev,
           isLoading: false,
           error: response?.message || 'Failed to submit quiz',
         }));
+
+        return false;
       }
     } catch (error) {
       console.error('❌ Submit quiz error:', error);
@@ -290,9 +279,10 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
         isLoading: false,
         error: 'Failed to submit quiz',
       }));
-    }
-  }, [state.answers, setUser]);
 
+      return false;
+    }
+  }, [state.answers]); // ⚠️ Remove setUser dari dependencies!
 
   const getCurrentQuestion = useCallback((): QuizQuestion | null => {
     if (state.questions.length === 0) return null;
