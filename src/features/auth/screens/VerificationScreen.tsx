@@ -312,7 +312,7 @@ export const VerificationScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           {/* Progress Bar */}
-          <View style={styles.progressContainer}>
+          {/* <View style={styles.progressContainer}>
             {[1, 2, 3, 4, 5, 6].map((s, index) => (
               <TouchableOpacity
                 key={s}
@@ -322,11 +322,11 @@ export const VerificationScreen = () => {
                 ]}
                 onPress={() => {
                   setStep(index);
-                  // scrollTo(index);
+                  scrollTo(index);
                 }}
               />
             ))}
-          </View>
+          </View> */}
           {/* Step Content */}
           <View style={styles.contentContainer}>
             {/* Step 0 name */}
@@ -451,7 +451,7 @@ export const VerificationScreen = () => {
                   </Text>
                 </View>
 
-                <View style={styles.interestGrid}>
+                {/* <View style={styles.interestGrid}>
                   {MOCK_INTERESTS.map((interest) => {
                     const selected = formData.interests.includes(interest.category);
                     const isMaxReached = formData.interests.length >= 10 && !selected;
@@ -484,7 +484,36 @@ export const VerificationScreen = () => {
                       </TouchableOpacity>
                     );
                   })}
+                </View> */}
 
+                <View style={styles.moodGrid}>
+                  {MOCK_INTERESTS.map((interest) => {
+                    const selected = formData.interests.includes(interest.category);
+                    const isMaxReached = formData.interests.length >= 10 && !selected;
+
+                    return (
+                      <TouchableOpacity
+                        key={interest.id}
+                        style={[
+                          styles.moodCard,
+                          selected && styles.moodCardActive,
+                          isMaxReached && styles.interestCardDisabled,
+                        ]}
+                        onPress={() => toggleInterest(interest.category)}
+                        disabled={isMaxReached}
+                      >
+                        <Text style={styles.moodEmoji}>{interest.icon}</Text>
+                        <Text
+                          style={[
+                            styles.moodLabel,
+                            isMaxReached && styles.interestTextDisabled,
+                          ]}
+                        >
+                          {interest.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
             )}
@@ -534,17 +563,6 @@ export const VerificationScreen = () => {
                           ]}>
                             {reason.description}
                           </Text>
-                        </View>
-
-                        <View
-                          style={[
-                            styles.checkbox,
-                            selected && styles.checkboxActive,
-                            isMaxReached && styles.checkboxDisabled,
-                          ]}>
-                          {selected && (
-                            <Text style={styles.checkmark}>✓</Text>
-                          )}
                         </View>
                       </TouchableOpacity>
                     );
@@ -644,11 +662,11 @@ export const VerificationScreen = () => {
 
         {/* Navigation Buttons */}
         <View style={styles.buttonContainer}>
-          {step > 0 && (
+          {/* {step > 0 && (
             <TouchableOpacity style={styles.backButton} onPress={handleBack}>
               <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
-          )}
+          )} */}
 
 
           <TouchableOpacity
@@ -802,33 +820,31 @@ const styles = StyleSheet.create({
   moodGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   moodCard: {
-    width: '31%',
-    aspectRatio: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
     borderColor: '#E5E7EB',
-    borderRadius: 16,
+    borderRadius: 25,
+    flexDirection: "row",
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 12,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    gap: 4,
   },
   moodCardActive: {
-    borderColor: '#8B5CF6',
+    borderColor: '#4DA3FF',
     backgroundColor: '#F9F5FF',
   },
   moodEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 18,
   },
   moodLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
     color: '#374151',
-    textAlign: 'center',
   },
   interestGrid: {
     flexDirection: 'row',
@@ -911,7 +927,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   reasonCardActive: {
-    borderColor: '#8B5CF6',
+    borderColor: '#4DA3FF',
     backgroundColor: '#F9F5FF',
   },
   reasonCardDisabled: {
@@ -968,7 +984,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // ✅ Location Section Styles
   locationSection: {
     marginBottom: 32,
   },
@@ -1051,11 +1066,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     paddingHorizontal: 24,
-    paddingVertical: 16,
     gap: 12,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   backButton: {
     flex: 1,
@@ -1075,7 +1087,7 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: 16,
     borderRadius: 12,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#0088FF',
     alignItems: 'center',
     justifyContent: 'center',
   },

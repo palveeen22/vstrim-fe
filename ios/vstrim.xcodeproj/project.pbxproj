@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -53,12 +53,14 @@
 		81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VstrimWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		81AFC88B2ED88BA6002DDD39 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		81AFC88D2ED88BA6002DDD39 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		81AFC8B32ED89672002DDD39 /* vstrim.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = vstrim.entitlements; path = vstrim/vstrim.entitlements; sourceTree = "<group>"; };
+		81AFC8B42ED896FE002DDD39 /* VstrimWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VstrimWidgetExtension.entitlements; sourceTree = "<group>"; };
 		92B4DEA51667B74D436B3954 /* Pods-vstrim.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-vstrim.debug.xcconfig"; path = "Target Support Files/Pods-vstrim/Pods-vstrim.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		81AFC8A32ED88BA7002DDD39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		81AFC8A32ED88BA7002DDD39 /* Exceptions for "VstrimWidget" folder in "VstrimWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -68,7 +70,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		81AFC88F2ED88BA6002DDD39 /* VstrimWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (81AFC8A32ED88BA7002DDD39 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = VstrimWidget; sourceTree = "<group>"; };
+		81AFC88F2ED88BA6002DDD39 /* VstrimWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				81AFC8A32ED88BA7002DDD39 /* Exceptions for "VstrimWidget" folder in "VstrimWidgetExtension" target */,
+			);
+			path = VstrimWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +104,7 @@
 		13B07FAE1A68108700A75B9A /* vstrim */ = {
 			isa = PBXGroup;
 			children = (
+				81AFC8B32ED89672002DDD39 /* vstrim.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -125,6 +135,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				81AFC8B42ED896FE002DDD39 /* VstrimWidgetExtension.entitlements */,
 				13B07FAE1A68108700A75B9A /* vstrim */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				81AFC88F2ED88BA6002DDD39 /* VstrimWidget */,
@@ -197,8 +208,6 @@
 				81AFC88F2ED88BA6002DDD39 /* VstrimWidget */,
 			);
 			name = VstrimWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = VstrimWidgetExtension;
 			productReference = 81AFC88A2ED88BA6002DDD39 /* VstrimWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -221,7 +230,6 @@
 				};
 			};
 			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "vstrim" */;
-			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -229,6 +237,7 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			preferredProjectObjectVersion = 77;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -367,7 +376,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = vstrim/vstrim.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JS9779LZ9M;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = vstrim/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -395,7 +406,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = vstrim/vstrim.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JS9779LZ9M;
 				INFOPLIST_FILE = vstrim/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -427,9 +440,11 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = VstrimWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JS9779LZ9M;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -469,10 +484,12 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = VstrimWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JS9779LZ9M;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;

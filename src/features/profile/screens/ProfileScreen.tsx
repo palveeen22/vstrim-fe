@@ -133,9 +133,9 @@ export const ProfileScreen = ({ navigation }: any) => {
           activeOpacity={0.7}
         >
           <View style={styles.profileContent}>
-            {user?.image ? (
+            {user?.photoProfile ? (
               <Image
-                source={{ uri: user.image }}
+                source={{ uri: user.photoProfile }}
                 style={styles.avatar}
               />
             ) : (

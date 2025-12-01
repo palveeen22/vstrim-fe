@@ -1,5 +1,5 @@
-export { AuthNavigation } from "./navigations";
-export { AuthService } from "./services";
+export { AuthNavigation } from "./navigations/AuthNavigator";
+export { AuthService } from "./services/authService";
 export { VerificationScreen } from "./screens/VerificationScreen";
 export { LoginScreen } from "./screens/LoginScreen";
 export { OnboardingScreen } from "./screens/OnBoardingScreen";

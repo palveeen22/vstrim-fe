@@ -2,7 +2,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { Image, StyleSheet, View } from "react-native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNetwork } from "../hooks/use-networks";
+import { useNetwork } from "../hooks/useNetworks";
 import { AuthNavigation, OnboardingScreen } from "../../features/auth";
 import { NetworkError } from "../../shared/components";
 
@@ -28,14 +28,12 @@ export const RootNavigator = () => {
 
   const checkInitialStatus = async () => {
     try {
-      // Check if onboarding has been completed
       const onboardingComplete = await AsyncStorage.getItem('@vstrim_onboarding_complete');
       setIsOnboardingComplete(onboardingComplete === 'true');
 
     } catch (error) {
       console.error('Error checking initial status:', error);
     } finally {
-      // Simulate splash screen for 2 seconds (adjust as needed)
       setTimeout(() => {
         setIsLoading(false);
       }, 2000);
@@ -65,19 +63,15 @@ export const RootNavigator = () => {
     );
   }
 
-  // Handle retrying connection
   const handleRetry = () => {
     checkConnection();
   };
 
   // Handle contact support
   const handleContactSupport = () => {
-    // Implement your contact support logic here
-    // This could open an email client, navigate to a support page, etc.
     console.log('Contact support pressed');
   };
 
-  // Show network error screen when there's no connection
   if (!isLoading && (!isConnected || isInternetReachable === false)) {
     return (
       <NetworkError

@@ -57,28 +57,6 @@ export const ProfileComunityScreen = ({ navigation }: any) => {
     Alert.alert('Explore Communities', 'Feature coming soon!');
   };
 
-  const getCategoryIcon = (category: string) => {
-    const icons: Record<string, string> = {
-      Hobbies: 'color-palette-outline',
-      Safety: 'shield-checkmark-outline',
-      Food: 'restaurant-outline',
-      Sports: 'football-outline',
-      Education: 'school-outline',
-    };
-    return icons[category] || 'people-outline';
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      Hobbies: '#10B981',
-      Safety: '#3B82F6',
-      Food: '#F59E0B',
-      Sports: '#EF4444',
-      Education: '#8B5CF6',
-    };
-    return colors[category] || '#6B7280';
-  };
-
   const joinedCommunities = user?.communities
 
   return (
@@ -127,78 +105,29 @@ export const ProfileComunityScreen = ({ navigation }: any) => {
               <TouchableOpacity
                 key={idx}
                 style={styles.communityCard}
-                onPress={() => handleCommunityPress(community.id)}
+                onPress={() => handleCommunityPress(community.communityId)}
                 activeOpacity={0.7}
               >
                 {/* Community Image/Icon */}
                 <View style={styles.communityLeft}>
-                  {/* {community.image ? (
-                    <Image
-                      source={{ uri: community.image }}
-                      style={styles.communityImage}
-                    />
-                  ) : (
-                    <View
-                      style={[
-                        styles.communityIconPlaceholder,
-                        {
-                          backgroundColor:
-                            getCategoryColor(community.category) + '15',
-                        },
-                      ]}
-                    >
-                      <Icon
-                        name={getCategoryIcon(community.category)}
-                        size={28}
-                        color={getCategoryColor(community.category)}
-                      />
-                    </View>
-                  )} */}
-
+                  {/* <Image
+                          source={require('../../../assets/icons/token.png')}
+                          style={styles.tokenEmoji}
+                          resizeMode="contain"
+                      /> */}
+                  <Text style={styles.iconComunity}>
+                    {community?.community?.icon}
+                  </Text>
                   <View style={styles.communityInfo}>
+
                     <Text style={styles.communityName} numberOfLines={1}>
                       {community?.community?.name}
                     </Text>
                     <Text style={styles.communityDescription} numberOfLines={2}>
                       {community?.community?.description}
                     </Text>
-                    <View style={styles.communityMeta}>
-                      {/* <Icon name="people" size={14} color="#9CA3AF" /> */}
-                      {/* <Text style={styles.memberCount}>
-                        {community.memberCount.toLocaleString()} members
-                      </Text> */}
-                      {/* <View
-                        style={[
-                          styles.categoryBadge,
-                          {
-                            backgroundColor:
-                              getCategoryColor(community.category) + '15',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryText,
-                            { color: getCategoryColor(community.category) },
-                          ]}
-                        >
-                          {community.category}
-                        </Text>
-                      </View> */}
-                    </View>
                   </View>
                 </View>
-
-                {/* Action Button */}
-                {/* <TouchableOpacity
-                  style={styles.leaveButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    handleLeaveCommunity(community.id, community.name);
-                  }}
-                >
-                  <Icon name="exit-outline" size={20} color="#EF4444" />
-                </TouchableOpacity> */}
               </TouchableOpacity>
             ))}
           </View>
@@ -309,6 +238,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
+  iconComunity: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+  },
   communityName: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -320,31 +254,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 8,
     lineHeight: 18,
-  },
-  communityMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  memberCount: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginLeft: 4,
-    marginRight: 8,
-  },
-  categoryBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  leaveButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#FEE2E2',
   },
   bottomSpacing: {
     height: 32,

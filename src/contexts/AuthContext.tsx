@@ -4,9 +4,9 @@ import {
   AuthService,
   LoginCredentials,
   RegisterData,
-  UserProfile
 } from '../features/auth';
 import { STORAGE_KEYS } from '../constants';
+import { User } from '../shared/types';
 
 type AuthResult = {
   success: boolean;
@@ -25,44 +25,24 @@ export interface AuthResponse {
   data?: {
     accessToken: string;
     refreshToken?: string;
-    user: UserProfile;
+    user: User;
     requiresProfileSetup?: boolean;
   };
 }
 
-// type ProfileSetupData = {
-//   username: string;
-//   mood: string;
-//   interests: string[];
-//   joinReasons: string[];
-//   coordinates: {
-//     latitude: number;
-//     longitude: number;
-//     city?: string;
-//     district?: string;
-//   };
-//   hangoutPlaces: Array<{
-//     placeName: string;
-//     placeType: string;
-//     latitude: number;
-//     longitude: number;
-//     address?: string;
-//   }>;
-// };
-
 type AuthContextType = {
   isLoading: boolean;
   isLoggedIn: boolean;
-  user: UserProfile | null;
+  user: User | null;
   login: (credentials: LoginCredentials) => Promise<AuthResult>;
-  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   register: (data: RegisterData) => Promise<AuthResult>;
   logout: () => Promise<void>;
   refreshUserProfile: () => Promise<any | null | undefined>;
-  updateProfile: (data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
+  updateProfile: (data: Partial<Omit<User, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<AuthResult>;
   checkUsernameAvailability: (username: string) => Promise<UsernameCheckResult>;
-  completeProfileSetup: (data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
+  completeProfileSetup: (data: Partial<Omit<User, 'id' | 'email' | 'createdAt'>>) => Promise<AuthResult>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -85,7 +65,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
 
   useEffect(() => {
@@ -126,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const userData: UserProfile = JSON.parse(userDataString);
+      const userData: User = JSON.parse(userDataString);
       setUser(userData);
       setIsLoggedIn(true);
 
@@ -294,8 +274,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           );
 
           console.log('✅ User state updated:', {
-            isVerified: response.data.isVerified,
-            onboardingCompleted: response.data.onboardingCompleted,
+            isVerified: response.data.user.isVerified,
+            onboardingCompleted: response.data.user.verificationCompleted,
           });
 
           return { success: true };
@@ -316,7 +296,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   const updateProfile = async (
-    data: Partial<Omit<UserProfile, 'id' | 'email' | 'createdAt'>>
+    data: Partial<Omit<User, 'id' | 'email' | 'createdAt'>>
   ): Promise<AuthResult> => {
     try {
       if (!user?.id) {

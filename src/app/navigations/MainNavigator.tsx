@@ -3,13 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons'
 import { useAuth } from '../../contexts/AuthContext';
 import { DailsQuizScreen } from '../../features/dailyQuiz';
-import MatchScreen from '../../screens/match-screen';
+import { ForYouScreen } from '../../features/forYou/screens/ForYouScreen';
 import { MapExploreScreen } from '../../features/explore';
 import { InBoxScreen } from '../../features/message';
 import { ProfileNavigator } from '../../features/profile';
 
 
-// Type definitions for the bottom tab navigator
 export type BottomTabParamList = {
   Quiz: undefined;
   Match: undefined;
@@ -18,10 +17,8 @@ export type BottomTabParamList = {
   Profile: undefined;
 };
 
-// Create navigators
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
-// Custom tab bar icon component
 const TabBarIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   const icons: { [key: string]: string } = {
     Quiz: 'flash-outline',
@@ -36,12 +33,9 @@ const TabBarIcon = ({ name, focused }: { name: string; focused: boolean }) => {
   );
 };
 
-// Main bottom tab navigator
 export const MainNavigator = () => {
-  // ✅ Ambil data dari quiz context
   const { user } = useAuth()
 
-  // ✅ Check apakah quiz hari ini sudah selesai
   const hasCompletedTodayQuiz = useMemo(() => {
     if (!user?.dailyQuizzes) return false;
 
@@ -74,8 +68,6 @@ export const MainNavigator = () => {
           height: 68,
           padding: 5,
           backgroundColor: '#FFFFFF',
-          // borderTopWidth: 1,
-          // borderTopColor: '#E0E0E0',
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -86,7 +78,7 @@ export const MainNavigator = () => {
       {!hasCompletedTodayQuiz ? (
         <Tab.Screen name="Quiz" component={DailsQuizScreen} />
       ) : (
-        <Tab.Screen name="Match" component={MatchScreen} />
+        <Tab.Screen name="Match" component={ForYouScreen} />
       )}
 
       <Tab.Screen name="Map" component={MapExploreScreen} />

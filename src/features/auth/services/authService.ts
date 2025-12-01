@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { LoginCredentials, RegisterData, UserProfile } from '../types/auth.types';
 import apiClient from '../../../app/config/apiClient';
 import { STORAGE_KEYS } from '../../../constants';
+import { User } from '../../../shared/types';
 
 
 
@@ -12,7 +13,7 @@ export interface AuthResponse {
   data?: {
     accessToken: string;
     refreshToken?: string;
-    user: UserProfile;
+    user: User;
     requiresProfileSetup?: boolean;
   };
 }
@@ -56,10 +57,10 @@ export class AuthService {
     }
   }
 
-  static async getUserProfile(userId: string): Promise<UserProfile | null> {
+  static async getUserProfile(userId: string): Promise<User | null> {
     try {
       console.log('👤 AuthService: Fetching user profile for:', userId);
-      const response = await apiClient.get<ApiResponse<UserProfile>>(
+      const response = await apiClient.get<ApiResponse<User>>(
         `/users/profile/${userId}`
       );
 
@@ -104,7 +105,7 @@ export class AuthService {
 
   static async completeProfileSetup(
     userId: string,
-    data: any
+    data: User
   ): Promise<AuthResponse> {
     try {
       console.log('📝 Completing profile setup for user:', userId);
@@ -304,7 +305,7 @@ export class AuthService {
 
   static async saveAuthData(
     token: string,
-    user: UserProfile,
+    user: User,
     refreshToken?: string
   ): Promise<void> {
     try {

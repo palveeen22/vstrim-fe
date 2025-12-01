@@ -1,1 +1,1 @@
-export { DailsQuizScreen } from "./quiz-screen";
+export { DailsQuizScreen } from "./DailsQuizScreen";
