@@ -1,9 +1,5 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../../../constants';
-import { AuthService } from '../../auth';
-
-const API_URL = process.env.BASE_URL_API || 'http://localhost:3002/api';
+import axios  from 'axios';
+import apiClient from '../../../app/config/apiClient';
 
 export interface QuizQuestion {
   id: string;
@@ -61,71 +57,6 @@ export interface SubmitQuizResponse {
     user: any
   };
 }
-
-interface AxiosRequestConfigWithRetry extends InternalAxiosRequestConfig {
-  _retry?: boolean;
-}
-
-// Axios instance
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-// ✅ Request interceptor to attach access token
-apiClient.interceptors.request.use(
-  async (config: InternalAxiosRequestConfig) => {
-    try {
-      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-      if (token) {
-        config.headers = config.headers ?? {};
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    } catch (error) {
-      console.error('❌ Failed to read token from storage', error);
-      return config;
-    }
-  },
-  (error) => Promise.reject(error)
-);
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError & { config?: AxiosRequestConfigWithRetry }) => {
-    const originalRequest = error.config;
-
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
-      console.warn('⚠️ 401 Unauthorized, attempting token refresh...');
-      originalRequest._retry = true;
-
-      const refreshResponse = await AuthService.refreshToken();
-
-      const newToken = refreshResponse.data?.accessToken;
-      if (refreshResponse.status === 'success' && newToken) {
-        // Update AsyncStorage
-        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, newToken);
-
-        // Update header dan ulangi request
-        if (error.config) {
-          error.config.headers.Authorization = `Bearer ${newToken}`;
-          return apiClient(error.config);
-        }
-      }
-
-
-      // Jika refresh gagal → logout user
-      await AuthService.clearAuthData();
-      return Promise.reject(error);
-    }
-
-    return Promise.reject(error);
-  }
-);
 
 
 export class QuizService {

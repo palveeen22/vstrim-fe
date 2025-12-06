@@ -151,34 +151,34 @@ export const DailsQuizScreen = ({ navigation }: any) => {
     }
   };
 
-const handleSuccessComplete = async () => {
-  setShowSuccess(false);
-  
-  // ✅ Re-sync user state dari AsyncStorage
-  try {
-    const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+  const handleSuccessComplete = async () => {
+    setShowSuccess(false);
 
-    if (userData) {
-      const updatedUser = JSON.parse(userData);
-      setUser(prevUser => ({
-        ...prevUser,
-        ...updatedUser,
-      }));
-      console.log('✅ User profile synced after success overlay');
+    // ✅ Re-sync user state dari AsyncStorage
+    try {
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+
+      if (userData) {
+        const updatedUser = JSON.parse(userData);
+        setUser(prevUser => ({
+          ...prevUser,
+          ...updatedUser,
+        }));
+        console.log('✅ User profile synced after success overlay');
+      }
+    } catch (syncError) {
+      console.error('❌ Failed to sync user:', syncError);
     }
-  } catch (syncError) { 
-    console.error('❌ Failed to sync user:', syncError);
-  }
-  
-  // Navigator akan otomatis switch ke Match tab
-  // navigation.navigate('Match');
-};
+
+    // Navigator akan otomatis switch ke Match tab
+    // navigation.navigate('Match');
+  };
   // Loading state
   if (isLoading && questions.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#FFA726" />
+          <ActivityIndicator size="large" color="#007BFF" />
           <Text style={styles.loadingText}>Loading daily quiz...</Text>
         </View>
       </SafeAreaView>
@@ -259,6 +259,16 @@ const handleSuccessComplete = async () => {
                 {currentQuestion.description}
               </Text>
             )}
+
+            {/* Helper Text */}
+            {currentQuestion.type === 'multiple' && (
+              <View style={styles.helperContainer}>
+                <Icon name="information-circle-outline" size={16} color="#9CA3AF" />
+                <Text style={styles.helperText}>
+                  You can select multiple options
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Options */}
@@ -286,7 +296,7 @@ const handleSuccessComplete = async () => {
                       <Icon
                         name={option.icon}
                         size={24}
-                        color={isSelected ? '#FFA726' : '#6B7280'}
+                        color={isSelected ? '#007BFF' : '#6B7280'}
                       />
                     </View>
                   )}
@@ -316,15 +326,6 @@ const handleSuccessComplete = async () => {
             })}
           </View>
 
-          {/* Helper Text */}
-          {currentQuestion.type === 'multiple' && (
-            <View style={styles.helperContainer}>
-              <Icon name="information-circle-outline" size={16} color="#9CA3AF" />
-              <Text style={styles.helperText}>
-                You can select multiple options
-              </Text>
-            </View>
-          )}
         </ScrollView>
       </Animated.View>
 
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFA726',
+    backgroundColor: '#007BFF',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -449,6 +450,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#6B7280',
+    fontFamily: 'Urbanist-Regular'
   },
   progressBarContainer: {
     height: 4,
@@ -459,7 +461,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#FFA726',
+    backgroundColor: '#007BFF',
     borderRadius: 2,
   },
   content: {
@@ -478,11 +480,13 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 12,
     lineHeight: 36,
+    fontFamily: 'Urbanist-Bold'
   },
   questionDescription: {
     fontSize: 16,
     color: '#6B7280',
     lineHeight: 24,
+    fontFamily: 'Urbanist-Light'
   },
   optionsContainer: {
     gap: 12,
@@ -497,8 +501,8 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
   },
   optionCardSelected: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#FFA726',
+    backgroundColor: '#DBEAFE',
+    borderColor: '#007BFF',
   },
   optionIconContainer: {
     width: 48,
@@ -517,6 +521,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#4B5563',
+    fontFamily: 'Urbanist-Regular'
   },
   optionLabelSelected: {
     color: '#1F2937',
@@ -532,18 +537,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectionIndicatorSelected: {
-    backgroundColor: '#FFA726',
-    borderColor: '#FFA726',
+    backgroundColor: '#007BFF',
+    borderColor: '#007BFF',
   },
   helperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 16,
-    gap: 8,
+    gap: 4,
   },
   helperText: {
     fontSize: 14,
     color: '#9CA3AF',
+    fontFamily: 'Urbanist-Light'
   },
   navigationContainer: {
     position: 'absolute',
@@ -553,8 +559,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 20,
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
     gap: 12,
   },
   backButton: {
@@ -577,7 +581,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFA726',
+    backgroundColor: '#007BFF',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
