@@ -1,29 +1,21 @@
+import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { AuthProvider } from './src/contexts/AuthContext';
-import { QuizProvider } from './src/contexts/DailyQuizContext';
-import { RootNavigator } from "./src/app/navigations/RootNavigator"
-import { useWidgetSync } from "./src/app/hooks/useWidgetSync"
-import { QueryClientConfig } from "./src/app/config/queryClient"
-import { QueryClientProvider } from '@tanstack/react-query';
+import { AppProviders } from './src/app/providers/AppProviders';
+import { RootNavigator } from './src/app/navigations/RootNavigator';
+import { useWidgetSync } from './src/app/hooks/useWidgetSync';
 
 const App = (): React.ReactElement => {
-  // call bridge to native
   useWidgetSync();
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-            <QueryClientProvider client={QueryClientConfig}>
-        <AuthProvider>
-          <QuizProvider>
-            <RootNavigator />
-          </QuizProvider>
-        </AuthProvider>
-        </QueryClientProvider>
+        <AppProviders>
+          <RootNavigator />
+        </AppProviders>
       </NavigationContainer>
     </SafeAreaProvider>
-
   );
 };
 
