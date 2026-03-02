@@ -1,4 +1,4 @@
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthScreen, LoginScreen, RegisterScreen, VerificationScreen } from '../screens';
 import { MainNavigator } from '../../../app/navigations/MainNavigator';

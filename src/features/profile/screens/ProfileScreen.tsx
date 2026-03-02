@@ -12,8 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuth } from '../../../contexts/AuthContext';
-import { HeaderBack } from '../../../shared/components';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { HeaderBack } from '../../../shared/ui';
 
 type MenuItem = {
   id: string;

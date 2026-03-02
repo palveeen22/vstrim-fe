@@ -13,7 +13,7 @@ import { useMatchStore } from '../hooks/matchStore';
 import { useMatchUsers } from '../hooks/useMatchUsers';
 import { MatchCard } from '../components/MatchCard';
 import { MatchCardSkeleton } from '../components/MatchListSkeleton';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 
 interface MatchScreenProps {
   navigation: any;

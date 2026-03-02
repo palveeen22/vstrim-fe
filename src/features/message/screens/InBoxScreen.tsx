@@ -77,13 +77,13 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native';
-import { SectionHeader } from '../../../shared/components/SectionHeader';
+import { SectionHeader } from '../../../shared/ui/SectionHeader';
 import { ChatListItem } from '../components/Inbox/ChatListItem';
 import { MessageHeader } from '../components/Inbox/MessageHeader';
 import { InboxStackParamList } from '../navigations/InboxNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useChatRooms } from '../hooks/useChatQueries';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { ChatRoom } from '../services/chatService';
 
 type Props = NativeStackScreenProps<InboxStackParamList, 'MessagesList'>;

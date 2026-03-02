@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNetwork } from "../hooks/useNetworks";
 import { AuthNavigation, OnboardingScreen } from "../../features/auth";
-import { NetworkError } from "../../shared/components";
+import { NetworkError } from "../../shared/ui";
 
 export type RootStackParamList = {
   Splash: undefined;

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from '../../features/message/stores/chatStore';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 import { ChatMessage } from '../../features/message/screens/InboxScreen';
 
 export const useChatSocket = (roomId: string) => {

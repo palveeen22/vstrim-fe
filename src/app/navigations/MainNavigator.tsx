@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons'
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 import { DailsQuizScreen } from '../../features/dailyQuiz';
 import { ForYouScreen } from '../../features/forYou/screens/ForYouScreen';
 import { MapExploreScreen } from '../../features/explore';

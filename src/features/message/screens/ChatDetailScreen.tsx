@@ -16,7 +16,7 @@ import { ChatInput } from '../components/chat/ChatInput';
 import { InboxStackParamList } from '../navigations/InboxNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useChatMessages } from '../hooks/useChatQueries';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { ChatMessage } from '../services/chatService';
 
 type Props = NativeStackScreenProps<InboxStackParamList, 'Chat'>;

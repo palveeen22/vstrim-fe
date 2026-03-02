@@ -1,26 +1,21 @@
-// store/matchStore.ts (Zustand)
+// Zustand store for match UI state only.
+// Business data (matches list) is managed by React Query (useMatchUsers).
 import { create } from 'zustand';
-import { MatchFilters, MatchResult } from '../services/matchService';
+import { MatchFilters } from '../services/matchService';
+import { MatchItem } from '../model/content';
 
-/**
- * Store untuk manage match state
- * Analogi: Seperti shopping cart state, tapi untuk matched users
- */
-interface MatchState {
-  matches: MatchResult[];
+interface MatchUIState {
+  // Local filter preferences (UI state)
   filters: MatchFilters;
-  selectedMatch: MatchResult | null;
-  
-  // Actions
-  setMatches: (matches: MatchResult[]) => void;
+  // Currently selected match for detail view (UI state)
+  selectedMatch: MatchItem | null;
+
   setFilters: (filters: MatchFilters) => void;
   updateFilters: (filters: Partial<MatchFilters>) => void;
-  setSelectedMatch: (match: MatchResult | null) => void;
-  clearMatches: () => void;
+  setSelectedMatch: (match: MatchItem | null) => void;
 }
 
-export const useMatchStore = create<MatchState>((set) => ({
-  matches: [],
+export const useMatchStore = create<MatchUIState>((set) => ({
   filters: {
     limit: 20,
     minMatchPercentage: 30,
@@ -28,16 +23,10 @@ export const useMatchStore = create<MatchState>((set) => ({
   },
   selectedMatch: null,
 
-  setMatches: (matches) => set({ matches }),
-  
   setFilters: (filters) => set({ filters }),
-  
+
   updateFilters: (newFilters) =>
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-    })),
-  
+    set((state) => ({ filters: { ...state.filters, ...newFilters } })),
+
   setSelectedMatch: (match) => set({ selectedMatch: match }),
-  
-  clearMatches: () => set({ matches: [], selectedMatch: null }),
 }));

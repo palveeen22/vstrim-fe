@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { useUsernameValidation } from '../../../hooks/use-username-validation';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { useLocation } from '../../../hooks/use-location';
 import { HangoutPlacePicker } from '../../../components/hangout-place-picker';
 import { JOIN_REASONS, MOCK_INTERESTS, VIBES } from '../../../constants';

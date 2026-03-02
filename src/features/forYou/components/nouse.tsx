@@ -16,7 +16,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { PickedPlaceCard } from '../components/PickedPlaceCard';
 import { QuickCategoryCard } from '../components/QuickCategoryCard';
-import { SectionHeader } from '../../../shared/components/SectionHeader';
+import { SectionHeader } from '../../../shared/ui/SectionHeader';
 import { EventCard } from '../components/EventCard';
 import { Header } from '../components/Header';
 

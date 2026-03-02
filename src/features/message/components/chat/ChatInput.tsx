@@ -11,7 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useChatStore } from '../../stores/chatStore';
 import { useSendMessage } from '../../hooks/useChatQueries';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useAuth } from '../../../../app/providers/AuthProvider';
 
 export const ChatInput = ({ roomId }: { roomId: string }) => {
   const { user } = useAuth();

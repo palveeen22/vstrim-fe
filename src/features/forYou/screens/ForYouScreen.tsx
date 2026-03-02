@@ -9,16 +9,16 @@ import {
 } from 'react-native';
 import { SegmentedControl } from '../components/SegmentedControl';
 import { QuickCategoryCard } from '../components/QuickCategoryCard';
-import { SectionHeader } from '../../../shared/components/SectionHeader';
+import { SectionHeader } from '../../../shared/ui/SectionHeader';
 import { EventCard } from '../components/EventCard';
 import { MatchCard } from '../../../features/match/components/MatchCard'; // 👈 Import MatchCard
 import { Header } from '../components/Header';
 import { EVENTS_DATA, EXPLORE_DATA } from '../model/content';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { useMatchUsers } from '../../../features/match/hooks/useMatchUsers';
 import { useMatchStore } from '../../../features/match/hooks/matchStore';
 import { MatchCardSkeleton } from '../../../features/match/components/MatchListSkeleton';
-import { NetworkError } from '../../../shared/components';
+import { NetworkError } from '../../../shared/ui';
 
 // 🎯 Type untuk Section
 type SectionType = 'categories' | 'events' | 'friends' | 'activities';

@@ -12,9 +12,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useQuiz } from '../../../contexts/DailyQuizContext';
+import { useQuiz } from '../../../app/providers/QuizProvider';
 import { SuccessOverlay } from '../components/SuccessOverlay';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../../../constants';
 
