@@ -1,2 +1,2 @@
 export { MessageScreen } from "./screens/MessageScreen";
-export { InBoxScreen } from "./screens/InBoxScreen";
+export { InboxScreen } from "./screens/InboxScreen";

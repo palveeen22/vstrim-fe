@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -53,10 +52,10 @@ export const MapExploreScreen = () => {
   const getMarkerColor = (type: UnifiedMarker["type"]) => {
     const colors = {
       user: "#FF6B35",
-      place: "#3B82F6",
-      promo: "#8B5CF6",
       community: "#10B981",
+      place: "#3B82F6",
       event: "#F59E0B",
+      promo: "#8B5CF6",
     };
     return colors[type] || "#9CA3AF";
   };
@@ -111,10 +110,10 @@ export const MapExploreScreen = () => {
   const filters = [
     { id: "all", label: "All", icon: "apps-outline" },
     { id: "user", label: "Users", icon: "person-outline" },
-    { id: "place", label: "Places", icon: "location-outline" },
-    { id: "promo", label: "Promos", icon: "pricetag-outline" },
     { id: "community", label: "Communities", icon: "earth-outline" },
+    { id: "place", label: "Places", icon: "location-outline" },
     { id: "event", label: "Events", icon: "calendar-outline" },
+    { id: "promo", label: "Promos", icon: "pricetag-outline" },
   ];
 
   return (
@@ -123,8 +122,8 @@ export const MapExploreScreen = () => {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={{ marginTop: 10, color: "#6B7280" }}>
+          <ActivityIndicator size="large" color="#007BFF" />
+          <Text style={styles.loaderText}>
             Loading map data...
           </Text>
         </View>
@@ -172,7 +171,21 @@ export const MapExploreScreen = () => {
             ))}
           </MapView>
 
+          <View style={styles.headerWrapper}>
+            {/* Glass effect background */}
+            <View style={styles.glassBackground}>
+              {/* Inner glow */}
+              <View style={styles.innerGlow} />
+            </View>
 
+            {/* Border highlight */}
+            <View style={styles.borderHighlight} />
+
+            {/* Content */}
+            <View style={styles.contentContainer}>
+              <Text style={styles.headerTitle}>What's Your Vibe?</Text>
+            </View>
+          </View>
 
           {/* ZOOM CONTROLS */}
           <View style={styles.zoomControls}>
@@ -234,13 +247,73 @@ export const MapExploreScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff"
+  },
   map: { flex: 1 },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+  },
+  loaderText: {
+    marginTop: 10,
+    color: "#6B7280"
+  },
+  headerWrapper: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    overflow: 'hidden',
+  },
+  glassBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+    // Shadow untuk depth
+    shadowColor: 'rgba(0, 123, 255, 0.3)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  innerGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(239, 246, 255, 0.5)',
+    opacity: 0.8,
+  },
+  borderHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  contentContainer: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontFamily: 'Urbanist-SemiBold',
+    fontSize: 28,
+    color: '#1e1e1e',
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   customMarker: {
     width: 40,
@@ -257,7 +330,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  filterScroll: { paddingHorizontal: 16, gap: 8 },
+  filterScroll: { paddingHorizontal: 16, gap: 2 },
   filterTab: {
     flexDirection: "row",
     alignItems: "center",
@@ -267,8 +340,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 4,
   },
-  filterTabActive: { backgroundColor: "#FF6B35" },
-  filterTabText: { marginLeft: 6, fontWeight: "600", color: "#6B7280" },
+  filterTabActive: { backgroundColor: "#007BFF" },
+  filterTabText: {
+    marginLeft: 6,
+    fontWeight: "600",
+    color: "#6B7280",
+    fontFamily: 'Urbanist-Light'
+  },
   filterTabTextActive: { color: "#fff" },
   zoomControls: {
     position: "absolute",
@@ -323,24 +401,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metaText: { color: "#6B7280", fontSize: 13 },
-iconContainer: {
-  width: 40,
-  height: 40,
-  borderRadius: 20,
-  backgroundColor: '#fff',
-  justifyContent: 'center',
-  alignItems: 'center',
-  // Shadow for iOS
-  shadowColor: '#000',
-  shadowOffset: {
-    width: 0,
-    height: 2,
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    // Shadow for Android
+    elevation: 5,
   },
-  shadowOpacity: 0.25,
-  shadowRadius: 3.84,
-  // Shadow for Android
-  elevation: 5,
-},
   emojiIcon: {
     fontSize: 24,
   },

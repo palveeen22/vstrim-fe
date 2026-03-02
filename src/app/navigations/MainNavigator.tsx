@@ -5,8 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { DailsQuizScreen } from '../../features/dailyQuiz';
 import { ForYouScreen } from '../../features/forYou/screens/ForYouScreen';
 import { MapExploreScreen } from '../../features/explore';
-import { InBoxScreen } from '../../features/message';
 import { ProfileNavigator } from '../../features/profile';
+import { InboxNavigator } from '../../features/message/navigations/InboxNavigator';
 
 
 export type BottomTabParamList = {
@@ -82,7 +82,7 @@ export const MainNavigator = () => {
       )}
 
       <Tab.Screen name="Map" component={MapExploreScreen} />
-      <Tab.Screen name="Message" component={InBoxScreen} />
+      <Tab.Screen name="Message" component={InboxNavigator} />
       <Tab.Screen name="Profile" component={ProfileNavigator} />
     </Tab.Navigator>
   );

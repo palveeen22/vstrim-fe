@@ -311,10 +311,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   actionButtonEmoji: {
-    width: 64,
-    height: 64,
+    width: 34,
+    height: 34,
   },
   title: {
     fontSize: 28,
