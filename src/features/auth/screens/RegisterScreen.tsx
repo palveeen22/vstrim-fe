@@ -15,9 +15,9 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../app/providers/AuthProvider';
 import { AuthStackParamList } from '../navigations/AuthNavigator';
-import { HeaderBack } from '@/shared/components';
+import { HeaderBack } from '../../../shared/ui';
 
 type TProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;

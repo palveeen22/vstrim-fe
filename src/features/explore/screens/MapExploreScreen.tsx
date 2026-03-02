@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -8,7 +7,6 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  Animated,
   ActivityIndicator,
 } from "react-native";
 import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
@@ -18,39 +16,17 @@ import {
   FilterType,
   UnifiedMarker,
 } from "../services/exploreDataService";
-
-// 🔒 Batas Area Saint Petersburg
-const PETERBURG_BOUNDS = {
-  north: 60.10,
-  south: 59.70,
-  east: 30.50,
-  west: 30.10,
-};
-
-// 🔒 Fungsi untuk mengunci map agar tetap di SPB + batasi zoom
-const clampRegionToSPB = (r: Region): Region => {
-  const latitude = Math.min(Math.max(r.latitude, PETERBURG_BOUNDS.south), PETERBURG_BOUNDS.north);
-  const longitude = Math.min(Math.max(r.longitude, PETERBURG_BOUNDS.west), PETERBURG_BOUNDS.east);
-
-  const minDelta = 0.02; // Zoom paling dekat
-  const maxDelta = 0.20; // Zoom paling jauh
-
-  const latitudeDelta = Math.min(Math.max(r.latitudeDelta, minDelta), maxDelta);
-  const longitudeDelta = Math.min(Math.max(r.longitudeDelta, minDelta), maxDelta);
-
-  return { latitude, longitude, latitudeDelta, longitudeDelta };
-};
+import { ExploreDetailsCard } from "../components/ExploreCard/ExploreDetailsCard";
+import { clampRegionToSPB } from "../hooks/useRadius";
 
 export const MapExploreScreen = () => {
   const mapRef = useRef<MapView>(null);
   const [markers, setMarkers] = useState<UnifiedMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMarker, setSelectedMarker] = useState<UnifiedMarker | null>(null);
+  const [sheetVisible, setSheetVisible] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
-  const slideAnim = useRef(new Animated.Value(300)).current;
-
-  // 🌍 Region default — Saint Petersburg center
   const [region, setRegion] = useState<Region>({
     latitude: 59.93,
     longitude: 30.33,
@@ -58,7 +34,6 @@ export const MapExploreScreen = () => {
     longitudeDelta: 0.05,
   });
 
-  // 🚀 Load data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -77,32 +52,24 @@ export const MapExploreScreen = () => {
   const getMarkerColor = (type: UnifiedMarker["type"]) => {
     const colors = {
       user: "#FF6B35",
-      place: "#3B82F6",
-      promo: "#8B5CF6",
       community: "#10B981",
+      place: "#3B82F6",
       event: "#F59E0B",
+      promo: "#8B5CF6",
     };
     return colors[type] || "#9CA3AF";
   };
 
-  const getMarkerIcon = (type: UnifiedMarker["type"]) => {
-    const icons = {
-      user: "person",
-      place: "location",
-      promo: "pricetag",
-      community: "earth",
-      event: "calendar",
-    };
-    return icons[type] || "help";
+
+  const getMarkerIcon = (marker: UnifiedMarker): string => {
+    return (marker.initialData && 'icon' in marker.initialData && marker.initialData.icon)
+      || '📍'; // Default emoji fallback
   };
+
 
   const handleMarkerPress = (marker: UnifiedMarker) => {
     setSelectedMarker(marker);
-
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-    }).start();
+    setSheetVisible(true);
 
     const newRegion = clampRegionToSPB({
       latitude: marker.latitude,
@@ -112,25 +79,20 @@ export const MapExploreScreen = () => {
     });
 
     setRegion(newRegion);
-    mapRef.current?.animateToRegion(newRegion, 200);
+    mapRef.current?.animateToRegion(newRegion, 300);
   };
 
-  const closeDetailCard = () => {
-    Animated.timing(slideAnim, {
-      toValue: 300,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => setSelectedMarker(null));
+  const closeSheet = () => {
+    setSheetVisible(false);
+    setSelectedMarker(null);
   };
 
-  // 🔍 Zoom control
   const zoomIn = () => {
     const newRegion = clampRegionToSPB({
       ...region,
       latitudeDelta: Math.max(region.latitudeDelta / 2, 0.02),
       longitudeDelta: Math.max(region.longitudeDelta / 2, 0.02),
     });
-
     setRegion(newRegion);
     mapRef.current?.animateToRegion(newRegion, 200);
   };
@@ -141,7 +103,6 @@ export const MapExploreScreen = () => {
       latitudeDelta: Math.min(region.latitudeDelta * 2, 0.20),
       longitudeDelta: Math.min(region.longitudeDelta * 2, 0.20),
     });
-
     setRegion(newRegion);
     mapRef.current?.animateToRegion(newRegion, 200);
   };
@@ -149,10 +110,10 @@ export const MapExploreScreen = () => {
   const filters = [
     { id: "all", label: "All", icon: "apps-outline" },
     { id: "user", label: "Users", icon: "person-outline" },
-    { id: "place", label: "Places", icon: "location-outline" },
-    { id: "promo", label: "Promos", icon: "pricetag-outline" },
     { id: "community", label: "Communities", icon: "earth-outline" },
+    { id: "place", label: "Places", icon: "location-outline" },
     { id: "event", label: "Events", icon: "calendar-outline" },
+    { id: "promo", label: "Promos", icon: "pricetag-outline" },
   ];
 
   return (
@@ -161,14 +122,13 @@ export const MapExploreScreen = () => {
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={{ marginTop: 10, color: "#6B7280" }}>
+          <ActivityIndicator size="large" color="#007BFF" />
+          <Text style={styles.loaderText}>
             Loading map data...
           </Text>
         </View>
       ) : (
         <>
-          {/* 🗺️ MAP */}
           <MapView
             ref={mapRef}
             provider={PROVIDER_DEFAULT}
@@ -180,11 +140,6 @@ export const MapExploreScreen = () => {
               mapRef.current?.animateToRegion(fixed, 50);
             }}
             showsUserLocation
-            zoomEnabled={true}
-            zoomControlEnabled={true}
-            scrollEnabled={true}
-            pitchEnabled={true}
-            rotateEnabled={true}
           >
             {filteredMarkers.map((marker) => (
               <Marker
@@ -201,11 +156,46 @@ export const MapExploreScreen = () => {
                     { backgroundColor: getMarkerColor(marker.type) },
                   ]}
                 >
-                  <Icon name={getMarkerIcon(marker.type)} size={20} color="#fff" />
+                  {/* <Icon
+                    name={getMarkerIcon(marker)}
+                    size={20}
+                    color="#fff"
+                  /> */}
+                  <View style={styles.iconContainer}>
+                    <Text style={styles.emojiIcon}>
+                      {getMarkerIcon(marker)}
+                    </Text>
+                  </View>
                 </View>
               </Marker>
             ))}
           </MapView>
+
+          <View style={styles.headerWrapper}>
+            {/* Glass effect background */}
+            <View style={styles.glassBackground}>
+              {/* Inner glow */}
+              <View style={styles.innerGlow} />
+            </View>
+
+            {/* Border highlight */}
+            <View style={styles.borderHighlight} />
+
+            {/* Content */}
+            <View style={styles.contentContainer}>
+              <Text style={styles.headerTitle}>What's Your Vibe?</Text>
+            </View>
+          </View>
+
+          {/* ZOOM CONTROLS */}
+          <View style={styles.zoomControls}>
+            <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
+              <Icon name="add" size={22} color="#111827" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
+              <Icon name="remove" size={22} color="#111827" />
+            </TouchableOpacity>
+          </View>
 
           {/* FILTERS */}
           <View style={styles.filterContainer}>
@@ -223,7 +213,7 @@ export const MapExploreScreen = () => {
                   ]}
                   onPress={() => {
                     setActiveFilter(filter.id as FilterType);
-                    closeDetailCard();
+                    closeSheet();
                   }}
                 >
                   <Icon
@@ -244,41 +234,12 @@ export const MapExploreScreen = () => {
             </ScrollView>
           </View>
 
-          {/* ZOOM BUTTONS */}
-          <View style={styles.zoomControls}>
-            <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
-              <Icon name="add" size={22} color="#111827" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
-              <Icon name="remove" size={22} color="#111827" />
-            </TouchableOpacity>
-          </View>
-
-          {/* DETAIL CARD */}
-          {selectedMarker && (
-            <Animated.View
-              style={[
-                styles.detailCard,
-                { transform: [{ translateY: slideAnim }] },
-              ]}
-            >
-              <View style={styles.detailCardHandle} />
-              <View style={styles.detailCardHeader}>
-                <Text style={styles.detailCardTitle}>
-                  {selectedMarker.title}
-                </Text>
-                <TouchableOpacity onPress={closeDetailCard}>
-                  <Icon name="close" size={24} color="#9CA3AF" />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.detailCardDescription}>
-                {selectedMarker.description}
-              </Text>
-              <Text style={styles.metaText}>
-                {selectedMarker.category || selectedMarker.type}
-              </Text>
-            </Animated.View>
-          )}
+          {/* CUSTOM BOTTOM SHEET */}
+          <ExploreDetailsCard
+            visible={sheetVisible}
+            marker={selectedMarker}
+            onClose={closeSheet}
+          />
         </>
       )}
     </SafeAreaView>
@@ -286,13 +247,73 @@ export const MapExploreScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#fff" },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff"
+  },
   map: { flex: 1 },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+  },
+  loaderText: {
+    marginTop: 10,
+    color: "#6B7280"
+  },
+  headerWrapper: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    overflow: 'hidden',
+  },
+  glassBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
+    // Shadow untuk depth
+    shadowColor: 'rgba(0, 123, 255, 0.3)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  innerGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(239, 246, 255, 0.5)',
+    opacity: 0.8,
+  },
+  borderHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  contentContainer: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontFamily: 'Urbanist-SemiBold',
+    fontSize: 28,
+    color: '#1e1e1e',
+    textAlign: 'center',
+    letterSpacing: -0.5,
   },
   customMarker: {
     width: 40,
@@ -305,11 +326,11 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     position: "absolute",
-    top: 80,
+    bottom: 50,
     left: 0,
     right: 0,
   },
-  filterScroll: { paddingHorizontal: 16, gap: 8 },
+  filterScroll: { paddingHorizontal: 16, gap: 2 },
   filterTab: {
     flexDirection: "row",
     alignItems: "center",
@@ -319,13 +340,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginHorizontal: 4,
   },
-  filterTabActive: { backgroundColor: "#FF6B35" },
-  filterTabText: { marginLeft: 6, fontWeight: "600", color: "#6B7280" },
+  filterTabActive: { backgroundColor: "#007BFF" },
+  filterTabText: {
+    marginLeft: 6,
+    fontWeight: "600",
+    color: "#6B7280",
+    fontFamily: 'Urbanist-Light'
+  },
   filterTabTextActive: { color: "#fff" },
   zoomControls: {
     position: "absolute",
     right: 16,
-    bottom: 140,
+    top: 140,
     backgroundColor: "rgba(255,255,255,0.9)",
     borderRadius: 12,
     overflow: "hidden",
@@ -375,4 +401,25 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metaText: { color: "#6B7280", fontSize: 13 },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    // Shadow for Android
+    elevation: 5,
+  },
+  emojiIcon: {
+    fontSize: 24,
+  },
 });

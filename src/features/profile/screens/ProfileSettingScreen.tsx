@@ -1,5 +1,5 @@
-import { useAuth } from '@/contexts/AuthContext';
-import { HeaderBack } from '@/shared/components';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { HeaderBack } from '../../../shared/ui';
 import React from 'react';
 import {
   View,

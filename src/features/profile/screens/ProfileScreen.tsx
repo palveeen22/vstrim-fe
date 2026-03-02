@@ -12,8 +12,8 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useAuth } from '../../../contexts/AuthContext';
-import { HeaderBack } from '@/shared/components';
+import { useAuth } from '../../../app/providers/AuthProvider';
+import { HeaderBack } from '../../../shared/ui';
 
 type MenuItem = {
   id: string;
@@ -133,9 +133,9 @@ export const ProfileScreen = ({ navigation }: any) => {
           activeOpacity={0.7}
         >
           <View style={styles.profileContent}>
-            {user?.image ? (
+            {user?.photoProfile ? (
               <Image
-                source={{ uri: user.image }}
+                source={{ uri: user.photoProfile }}
                 style={styles.avatar}
               />
             ) : (

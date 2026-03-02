@@ -7,13 +7,16 @@ module.exports = {
       {
         root: ['./src'],
         alias: {
-          '@assets': './src/assets',
+          // FSD layer aliases
           '@app': './src/app',
-          '@components': './src/components',
-          '@domain': './src/domain',
-          '@routes': './src/routes',
-          '@screen': './src/screen',
-          '@utility': './src/utility',
+          '@pages': './src/pages',
+          '@widgets': './src/widgets',
+          '@features': './src/features',
+          '@entities': './src/entities',
+          '@shared': './src/shared',
+          // Asset alias
+          '@assets': './src/assets',
+          // Legacy (kept for backward compat during migration)
           '@src': './src',
         },
         extensions: [
