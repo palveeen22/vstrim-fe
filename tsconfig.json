@@ -3,15 +3,14 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["*"],
       "@app/*": ["app/*"],
+      "@pages/*": ["pages/*"],
+      "@widgets/*": ["widgets/*"],
       "@features/*": ["features/*"],
-      "@components/*": ["components/*"],
-      "@screens/*": ["screens/*"],
-      "@hooks/*": ["hooks/*"],
-      "@services/*": ["services/*"],
-      "@config/*": ["app/config/*"],
-      "@utils/*": ["utils/*"]
+      "@entities/*": ["entities/*"],
+      "@shared/*": ["shared/*"],
+      "@assets/*": ["../src/assets/*"],
+      "@src/*": ["*"]
     }
   },
   "include": ["src"]
